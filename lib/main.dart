@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -5,7 +6,9 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:voyzi/app/services/auth_service.dart';
 import 'package:voyzi/app/utils/helpers/extensions/extensions.dart';
+import 'package:voyzi/firebase_options.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'app/utils/helpers/injectable/injectable.dart';
@@ -14,8 +17,12 @@ import 'app/utils/themes/app_theme.dart';
 const _kAppName = 'Voyzi';
 final GlobalKey<NavigatorState> navigationState = GlobalKey<NavigatorState>();
 
-void main() {
+void main()async   {
   configuration(myApp: MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+    name: "Rolling Voyzis",
+  );
 } 
 
 class MyApp extends StatelessWidget {

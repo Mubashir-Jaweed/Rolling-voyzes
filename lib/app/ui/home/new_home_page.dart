@@ -5,6 +5,8 @@ import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:voyzi/app/routes/app_routes.dart';
+import 'package:voyzi/app/services/auth_service.dart';
 import 'package:voyzi/app/ui/inbox/inbox.dart';
 import 'package:voyzi/app/ui/local_voyzi/local_voyzi.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
@@ -222,6 +224,7 @@ class HomePage extends GetItHook {
                   Padding(
                     padding: AppEdgeInsets.h16(),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         ImageView(
                           imagePath: Assets.png.frame2.path,
@@ -240,7 +243,12 @@ class HomePage extends GetItHook {
                                 )
                               : SizedBox();
                         }),
-                        Gap(20)
+                        // Gap(20),
+                        InkWell(
+                          onTap: () {
+                             AuthService().signOut();
+                          },
+                          child: Icon(Icons.logout, color: Colors.black,)),
                       ],
                     ),
                   ),

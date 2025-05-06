@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "189323892292",
+    "project_id": "rolling-voyzis",
+    "storage_bucket": "rolling-voyzis.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189323892292:android:5dcc2959064b6cad99ce11",
+        "android_client_info": {
+          "package_name": "com.example.voyzi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMPhAKWMWFl5ceFdnLyo1In9HoGUUDb5s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

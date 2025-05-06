@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"rolling-voyzis","appId":"1:189323892292:android:5dcc2959064b6cad99ce11","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"rolling-voyzis","configurations":{"android":"1:189323892292:android:5dcc2959064b6cad99ce11","ios":"1:189323892292:ios:6a62bb62ff20ab3299ce11"}}}}}}
