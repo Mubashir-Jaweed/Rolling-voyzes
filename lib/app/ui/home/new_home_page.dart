@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
 import 'package:voyzi/app/services/auth_services.dart';
+import 'package:voyzi/app/services/firestore_services.dart';
 import 'package:voyzi/app/ui/inbox/inbox.dart';
 import 'package:voyzi/app/ui/local_voyzi/local_voyzi.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
@@ -181,6 +182,18 @@ class HomePage extends GetItHook {
     super.onInit();
     initializePlayers();
     setupCompletionListeners();
+    fetchRandomPrompt();
+  }
+
+  var isLoading = true.obs;
+  var prompt = ''.obs;
+
+ Future<void> fetchRandomPrompt() async {
+    final fetchedPrompt = await FirestoreService().getRandomPrompt();
+    prompt.value = fetchedPrompt ?? "No prompt found";
+    isLoading.value = false;
+    print('........HI........') ;
+    print(prompt.value);
   }
 
   @override
