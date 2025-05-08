@@ -9,6 +9,6 @@ class AppPages {
   static final routes = [
     GetPage(name: AppRoutes.home, page: () => HomePage()),
     GetPage(name: AppRoutes.splash, page: () => Splash()),
-    GetPage(name: AppRoutes.login, page: () => AnonymousSignin()) 
+    GetPage(name: AppRoutes.login, page: () => AnonymousSignin())
   ];
 }

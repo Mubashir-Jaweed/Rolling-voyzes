@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBMPhAKWMWFl5ceFdnLyo1In9HoGUUDb5s',
-    appId: '1:189323892292:android:5dcc2959064b6cad99ce11',
-    messagingSenderId: '189323892292',
-    projectId: 'rolling-voyzis',
-    storageBucket: 'rolling-voyzis.firebasestorage.app',
+    apiKey: 'AIzaSyDL_TXA8Wg95uRc0iNXHQm5CySGvyM-iWI',
+    appId: '1:800051413710:android:c2684802fe1f115351469f',
+    messagingSenderId: '800051413710',
+    projectId: 'voyzi-app',
+    storageBucket: 'voyzi-app.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAuu2Wsx1ePp37EGYyaDBDOS6SD_St6YcY',
-    appId: '1:189323892292:ios:6a62bb62ff20ab3299ce11',
-    messagingSenderId: '189323892292',
-    projectId: 'rolling-voyzis',
-    storageBucket: 'rolling-voyzis.firebasestorage.app',
+    apiKey: 'AIzaSyDUz9gmDYLBauyjaaET79NrZYvw8pN16_g',
+    appId: '1:800051413710:ios:4fa8318523961ecb51469f',
+    messagingSenderId: '800051413710',
+    projectId: 'voyzi-app',
+    storageBucket: 'voyzi-app.firebasestorage.app',
     iosBundleId: 'com.kmtemp.voyzi.app',
   );
 }

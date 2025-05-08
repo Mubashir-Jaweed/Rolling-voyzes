@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
-import 'package:voyzi/app/services/auth_service.dart';
+import 'package:voyzi/app/services/auth_services.dart';
 import 'package:voyzi/app/ui/inbox/inbox.dart';
 import 'package:voyzi/app/ui/local_voyzi/local_voyzi.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
@@ -183,13 +183,6 @@ class HomePage extends GetItHook {
     setupCompletionListeners();
   }
 
-  Future<void> _refresh() async {
-  await Future.delayed(Duration(seconds: 2)); // simulate delay
-  print('object');
-  
-}
-
-
   @override
   Widget build(BuildContext context) {
     final appColors = AppColors.of(context);
@@ -219,346 +212,345 @@ class HomePage extends GetItHook {
       //     color: appColors.black,
       //   ),
       // ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: Padding(
-          padding: EdgeInsets.zero,
-          child: Obx(() {
-            return IndexedStack(index: selectedIndex.value, children: [
-              Padding(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    Gap(MediaQuery.of(context).padding.top),
-                    Padding(
-                      padding: AppEdgeInsets.h16(),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ImageView(
-                            imagePath: Assets.png.frame2.path,
-                            width: Constants.appBarHeaderImagesize,
-                            color: appColors.black,
-                            alignment: Alignment.centerLeft,
-                            margin: EdgeInsets.zero,
-                          ),
-                          Obx(() {
-                            return selectedIndex.value == 2
-                                ? Text(
-                                    AppStrings.T.edit,
-                                    style: appStyles.s20w700Black.copyWith(
-                                        letterSpacing: -0.5,
-                                        fontWeight: FontWeight.w300),
-                                  )
-                                : SizedBox();
-                          }),
-                          // Gap(20),
-                          InkWell(
-                            onTap: () {
-                               AuthService().signOut();
-                            },
-                            child: Icon(Icons.logout, color: Colors.black,)),
-                        ],
-                      ),
+      body: Padding(
+        padding: EdgeInsets.zero,
+        child: Obx(() {
+          return IndexedStack(index: selectedIndex.value, children: [
+            Padding(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  Gap(MediaQuery.of(context).padding.top),
+                  Padding(
+                    padding: AppEdgeInsets.h16(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ImageView(
+                          imagePath: Assets.png.frame2.path,
+                          width: Constants.appBarHeaderImagesize,
+                          color: appColors.black,
+                          alignment: Alignment.centerLeft,
+                          margin: EdgeInsets.zero,
+                        ),
+                        Obx(() {
+                          return selectedIndex.value == 2
+                              ? Text(
+                                  AppStrings.T.edit,
+                                  style: appStyles.s20w700Black.copyWith(
+                                      letterSpacing: -0.5,
+                                      fontWeight: FontWeight.w300),
+                                )
+                              : SizedBox();
+                        }),
+                        // Gap(20)
+                        InkWell(
+                          onTap: ()async{
+                            await AuthService.instance.signOut();
+                            Get.offAllNamed(AppRoutes.login);
+                          },
+                          child: Icon(Icons.logout,color: Colors.black,),
+                        )
+                      ],
                     ),
-                    Gap(10),
-                    Expanded(
-                      child: ListView(
-                        padding: AppEdgeInsets.h16(),
-                        children: [
-                          SizedBox(
-                            height: 105,
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              itemCount: 5,
-                              padding: EdgeInsets.zero,
-                              scrollDirection: Axis.horizontal,
-                              separatorBuilder: (context, i) => Gap(15),
-                              itemBuilder: (context, index) {
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 35,
-                                      foregroundImage: AssetImage(assets[index]),
-                                    ),
-                                    Gap(7),
-                                    Text(
-                                      names[index],
-                                      style: appStyles.s18w400Text
-                                          .copyWith(color: appColors.black),
-                                    )
-                                  ],
-                                );
-                              },
-                            ),
+                  ),
+                  Gap(10),
+                  Expanded(
+                    child: ListView(
+                      padding: AppEdgeInsets.h16(),
+                      children: [
+                        SizedBox(
+                          height: 105,
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: 5,
+                            padding: EdgeInsets.zero,
+                            scrollDirection: Axis.horizontal,
+                            separatorBuilder: (context, i) => Gap(15),
+                            itemBuilder: (context, index) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 35,
+                                    foregroundImage: AssetImage(assets[index]),
+                                  ),
+                                  Gap(7),
+                                  Text(
+                                    names[index],
+                                    style: appStyles.s18w400Text
+                                        .copyWith(color: appColors.black),
+                                  )
+                                ],
+                              );
+                            },
                           ),
-                          Gap(18),
-                          borderContainer(
-                            padding: AppEdgeInsets.all16(),
-                            boxShadow: Utils.boxShadow,
-                            colors: [
-                              appColors.normalWhiteGradientColor,
-                              appColors.normalBlueGradientColor,
-                            ],
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      AppStrings.T.rollingVoyzis,
-                                      style: appStyles.s20w700White.copyWith(
-                                          color: appColors.black,
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                    ImageView(
-                                      imagePath: Assets.png.dice.path,
-                                      height: 50,
-                                    )
-                                  ],
-                                ),
-                                Gap(5),
-                                Text(
-                                  AppStrings
-                                      .T.whatsAMomentYouKnewYouFkdUpInstantly,
-                                  style: appStyles.s18w400Text.copyWith(
-                                    color: appColors.black,
-                                    height: 1.2,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                                Gap(15),
-                                Container(
-                                  padding: AppEdgeInsets.all16() +
-                                      EdgeInsets.symmetric(vertical: 3),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        appColors.audio1TopLeftColor,
-                                        appColors.audio1BottomRightColor,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Gap(10),
-                                      WaveShapes(appColors: appColors),
-                                      Gap(10),
-                                      isPlaying[2].value
-                                          ? pauseButton(
-                                              appColors: appColors,
-                                              onTap: () {
-                                                rollingPlay(0);
-                                              })
-                                          : ImageView(
-                                              imagePath: Assets.png.playIcon.path,
-                                              height: playIconHeight,
-                                              onTap: () {
-                                                rollingPlay(0);
-                                              },
-                                            ),
-                                    ],
-                                  ),
-                                ),
-                                Gap(10),
-                                Container(
-                                  padding: AppEdgeInsets.all16() +
-                                      EdgeInsets.symmetric(vertical: 3),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        appColors.audio2TopLeftColor,
-                                        appColors.audio2BottomRightColor,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Gap(10),
-                                      WaveShapes(appColors: appColors),
-                                      Gap(10),
-                                      isPlaying[3].value
-                                          ? pauseButton(
-                                              appColors: appColors,
-                                              onTap: () {
-                                                rollingPlay(1);
-                                              })
-                                          : ImageView(
-                                              imagePath: Assets.png.playIcon.path,
-                                              height: playIconHeight,
-                                              onTap: () {
-                                                rollingPlay(1);
-                                              },
-                                            ),
-                                    ],
-                                  ),
-                                ),
-                                Gap(5),
-                              ],
-                            ),
-                            appColors: appColors,
-                          ),
-                          Gap(18),
-                          borderContainer(
-                            boxShadow: Utils.boxShadow,
-                            colors: [
-                              appColors.normalWhiteGradientColor,
-                              appColors.normalBlueGradientColor,
-                            ],
-                            padding: AppEdgeInsets.all16() -
-                                const EdgeInsets.only(right: 10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    // Gap(10),
-                                    Text(
-                                      AppStrings.T.localVoyzis,
-                                      style: appStyles.s20w700White.copyWith(
+                        ),
+                        Gap(18),
+                        borderContainer(
+                          padding: AppEdgeInsets.all16(),
+                          boxShadow: Utils.boxShadow,
+                          colors: [
+                            appColors.normalWhiteGradientColor,
+                            appColors.normalBlueGradientColor,
+                          ],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    AppStrings.T.rollingVoyzis,
+                                    style: appStyles.s20w700White.copyWith(
                                         color: appColors.black,
                                         fontSize: 28,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  ImageView(
+                                    imagePath: Assets.png.dice.path,
+                                    height: 50,
+                                  )
+                                ],
+                              ),
+                              Gap(5),
+                              Text(
+                                AppStrings
+                                    .T.whatsAMomentYouKnewYouFkdUpInstantly,
+                                style: appStyles.s18w400Text.copyWith(
+                                  color: appColors.black,
+                                  height: 1.2,
+                                  fontSize: 20,
                                 ),
-                                Gap(10),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                              ),
+                              Gap(15),
+                              Container(
+                                padding: AppEdgeInsets.all16() +
+                                    EdgeInsets.symmetric(vertical: 3),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      appColors.audio1TopLeftColor,
+                                      appColors.audio1BottomRightColor,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: Row(
                                   children: [
-                                    // Gap(10),
-                                    Flexible(
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            padding: AppEdgeInsets.all16() -
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 5),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  appColors.audio2TopLeftColor,
-                                                  appColors
-                                                      .audio2BottomRightColor,
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Gap(10),
-                                                smallWaveShapes(
-                                                    appColors: appColors),
-                                                Gap(15),
-                                                isPlaying[0].value
-                                                    ? pauseButton(
-                                                        appColors: appColors,
-                                                        onTap: () {
-                                                          localPlay(0);
-                                                        })
-                                                    : ImageView(
-                                                        imagePath: Assets
-                                                            .png.playIcon.path,
-                                                        height: playIconHeight,
-                                                        onTap: () {
-                                                          localPlay(0);
-                                                        },
-                                                      ),
-                                              ],
-                                            ),
+                                    Gap(10),
+                                    WaveShapes(appColors: appColors),
+                                    Gap(10),
+                                    isPlaying[2].value
+                                        ? pauseButton(
+                                            appColors: appColors,
+                                            onTap: () {
+                                              rollingPlay(0);
+                                            })
+                                        : ImageView(
+                                            imagePath: Assets.png.playIcon.path,
+                                            height: playIconHeight,
+                                            onTap: () {
+                                              rollingPlay(0);
+                                            },
                                           ),
-                                          Gap(10),
-                                          Container(
-                                            padding: AppEdgeInsets.all16() -
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 5),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  appColors.audio1TopLeftColor,
-                                                  appColors
-                                                      .audio1BottomRightColor,
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Gap(10),
-                                                smallWaveShapes(
-                                                    appColors: appColors),
-                                                Gap(15),
-                                                isPlaying[1].value
-                                                    ? pauseButton(
-                                                        appColors: appColors,
-                                                        onTap: () {
-                                                          localPlay(1);
-                                                        })
-                                                    : ImageView(
-                                                        imagePath: Assets
-                                                            .png.playIcon.path,
-                                                        height: playIconHeight,
-                                                        onTap: () {
-                                                          localPlay(1);
-                                                        },
-                                                      ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: ImageView(
-                                        imagePath: Assets.png.map.path,
-                                        fit: BoxFit.contain,
-                                        margin: AppEdgeInsets.all4(),
-                                      ),
-                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                            appColors: appColors,
+                              ),
+                              Gap(10),
+                              Container(
+                                padding: AppEdgeInsets.all16() +
+                                    EdgeInsets.symmetric(vertical: 3),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      appColors.audio2TopLeftColor,
+                                      appColors.audio2BottomRightColor,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Gap(10),
+                                    WaveShapes(appColors: appColors),
+                                    Gap(10),
+                                    isPlaying[3].value
+                                        ? pauseButton(
+                                            appColors: appColors,
+                                            onTap: () {
+                                              rollingPlay(1);
+                                            })
+                                        : ImageView(
+                                            imagePath: Assets.png.playIcon.path,
+                                            height: playIconHeight,
+                                            onTap: () {
+                                              rollingPlay(1);
+                                            },
+                                          ),
+                                  ],
+                                ),
+                              ),
+                              Gap(5),
+                            ],
                           ),
-                          Gap(18),
-                        ],
-                      ),
+                          appColors: appColors,
+                        ),
+                        Gap(18),
+                        borderContainer(
+                          boxShadow: Utils.boxShadow,
+                          colors: [
+                            appColors.normalWhiteGradientColor,
+                            appColors.normalBlueGradientColor,
+                          ],
+                          padding: AppEdgeInsets.all16() -
+                              const EdgeInsets.only(right: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  // Gap(10),
+                                  Text(
+                                    AppStrings.T.localVoyzis,
+                                    style: appStyles.s20w700White.copyWith(
+                                      color: appColors.black,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Gap(10),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  // Gap(10),
+                                  Flexible(
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: AppEdgeInsets.all16() -
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 5),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                appColors.audio2TopLeftColor,
+                                                appColors
+                                                    .audio2BottomRightColor,
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Gap(10),
+                                              smallWaveShapes(
+                                                  appColors: appColors),
+                                              Gap(15),
+                                              isPlaying[0].value
+                                                  ? pauseButton(
+                                                      appColors: appColors,
+                                                      onTap: () {
+                                                        localPlay(0);
+                                                      })
+                                                  : ImageView(
+                                                      imagePath: Assets
+                                                          .png.playIcon.path,
+                                                      height: playIconHeight,
+                                                      onTap: () {
+                                                        localPlay(0);
+                                                      },
+                                                    ),
+                                            ],
+                                          ),
+                                        ),
+                                        Gap(10),
+                                        Container(
+                                          padding: AppEdgeInsets.all16() -
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 5),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                appColors.audio1TopLeftColor,
+                                                appColors
+                                                    .audio1BottomRightColor,
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Gap(10),
+                                              smallWaveShapes(
+                                                  appColors: appColors),
+                                              Gap(15),
+                                              isPlaying[1].value
+                                                  ? pauseButton(
+                                                      appColors: appColors,
+                                                      onTap: () {
+                                                        localPlay(1);
+                                                      })
+                                                  : ImageView(
+                                                      imagePath: Assets
+                                                          .png.playIcon.path,
+                                                      height: playIconHeight,
+                                                      onTap: () {
+                                                        localPlay(1);
+                                                      },
+                                                    ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: ImageView(
+                                      imagePath: Assets.png.map.path,
+                                      fit: BoxFit.contain,
+                                      margin: AppEdgeInsets.all4(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          appColors: appColors,
+                        ),
+                        Gap(18),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              LocalVoyzi(
-                selectedIndex: selectedIndex,
-                stopAllPlayers: stopAllPlayers,
+            ),
+            LocalVoyzi(
+              selectedIndex: selectedIndex,
+              stopAllPlayers: stopAllPlayers,
+            ),
+            Inbox(
+              selectedIndex: selectedIndex,
+            ),
+            Center(
+              child: Text(
+                'Profile',
+                style: appStyles.s26w700White.copyWith(color: appColors.black),
               ),
-              Inbox(
-                selectedIndex: selectedIndex,
-              ),
-              Center(
-                child: Text(
-                  'Profile',
-                  style: appStyles.s26w700White.copyWith(color: appColors.black),
-                ),
-              ),
-            ]);
-          }),
-        ),
+            ),
+          ]);
+        }),
       ),
       bottomNavigationBar: Container(
         padding: AppEdgeInsets.all18() +

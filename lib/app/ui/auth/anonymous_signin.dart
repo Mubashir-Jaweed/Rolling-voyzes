@@ -2,12 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
-import 'package:voyzi/app/services/auth_service.dart';
+import 'package:voyzi/app/services/auth_services.dart';
 import 'package:voyzi/app/ui/widgets/custom_image_view.dart';
 import 'package:voyzi/gen/assets.gen.dart';
 
 class AnonymousSignin extends StatefulWidget {
   const AnonymousSignin({super.key});
+  
 
   @override
   State<AnonymousSignin> createState() => _AnonymousSigninState();
@@ -15,12 +16,18 @@ class AnonymousSignin extends StatefulWidget {
 
 class _AnonymousSigninState extends State<AnonymousSignin> {
   bool isLoading = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<void> signInAnonymously() async {
     setState(() => isLoading = true);
     try {
-      await AuthService().signInAnonymously();
-      Get.offAllNamed(AppRoutes.home);
+      User? user = await AuthService.instance.signInAnonymously();
+       if (user != null) {
+      print('Signed in as: ${user?.uid}');
+      Get.offAllNamed(AppRoutes.home); 
+    } else {
+      Get.snackbar("Error", "User is null after sign-in : TRY AGAIN");
+    }
     } catch (e) {
       Get.snackbar("Error", "Failed to sign in anonymously");
     } finally {
