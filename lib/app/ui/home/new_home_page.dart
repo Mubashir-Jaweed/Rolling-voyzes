@@ -1,9 +1,10 @@
-import 'dart:developer';
+import 'dart:async';
+import 'dart:developer' as dev;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
-
 import 'package:just_audio/just_audio.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
 import 'package:voyzi/app/services/auth_services.dart';
@@ -25,10 +26,12 @@ class HomePage extends GetItHook {
   HomePage({super.key});
 
   @override
-  // TODO: implement canDisposeController
   bool get canDisposeController => false;
 
   RxInt selectedIndex = 0.obs;
+  final RefreshController refreshController = RefreshController();
+  RxBool isRefreshing = false.obs;
+  RxList<Widget> audioDropAnimations = <Widget>[].obs;
 
   Future<void> stopAllPlayers() async {
     for (var player in localAudioPlayers) {
@@ -42,7 +45,6 @@ class HomePage extends GetItHook {
       }
     }
 
-    // Set all `isPlaying` flags to false
     for (var playingFlag in isPlaying) {
       playingFlag.value = false;
     }
@@ -82,21 +84,19 @@ class HomePage extends GetItHook {
   List<RxBool> isPlaying = [];
 
   Future<void> localPlay(int index) async {
-    // If already playing → pause
     if (localAudioPlayers[index].playing) {
-      log("Stop Local $index");
+      dev.log("Stop Local $index");
       isPlaying[index].value = false;
       await localAudioPlayers[index].pause();
     } else {
-      log("Play Local $index");
+      dev.log("Play Local $index");
+      startAudioDropAnimation();
 
-      // Pause all rolling players
       for (int i = 0; i < rollingAudioPlayers.length; i++) {
         await rollingAudioPlayers[i].pause();
         isPlaying[i + localAudioPlayers.length].value = false;
       }
 
-      // Pause other local players
       for (int i = 0; i < localAudioPlayers.length; i++) {
         if (i != index) {
           await localAudioPlayers[i].pause();
@@ -114,19 +114,18 @@ class HomePage extends GetItHook {
     final rollingIndex = index + localAudioPlayers.length;
 
     if (rollingAudioPlayers[index].playing) {
-      log("Stop Rolling $index");
+      dev.log("Stop Rolling $index");
       isPlaying[rollingIndex].value = false;
       await rollingAudioPlayers[index].pause();
     } else {
-      log("Play Rolling $index");
+      dev.log("Play Rolling $index");
+      startAudioDropAnimation();
 
-      // Pause all local players
       for (int i = 0; i < localAudioPlayers.length; i++) {
         await localAudioPlayers[i].pause();
         isPlaying[i].value = false;
       }
 
-      // Pause other rolling players
       for (int i = 0; i < rollingAudioPlayers.length; i++) {
         if (i != index) {
           await rollingAudioPlayers[i].pause();
@@ -155,22 +154,20 @@ class HomePage extends GetItHook {
   double playIconHeight = 40;
 
   void setupCompletionListeners() {
-    // Local players
     for (int i = 0; i < localAudioPlayers.length; i++) {
       localAudioPlayers[i].playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
-          log("Local audio $i completed");
+          dev.log("Local audio $i completed");
           isPlaying[i].value = false;
         }
       });
     }
 
-    // Rolling players
     for (int i = 0; i < rollingAudioPlayers.length; i++) {
       final rollingIndex = i + localAudioPlayers.length;
       rollingAudioPlayers[i].playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
-          log("Rolling audio $i completed");
+          dev.log("Rolling audio $i completed");
           isPlaying[rollingIndex].value = false;
         }
       });
@@ -183,17 +180,71 @@ class HomePage extends GetItHook {
     initializePlayers();
     setupCompletionListeners();
     fetchRandomPrompt();
+    schedulePromptRefresh();
   }
 
   var isLoading = true.obs;
   var prompt = ''.obs;
+  Timer? _refreshTimer;
 
- Future<void> fetchRandomPrompt() async {
-    final fetchedPrompt = await FirestoreService().getRandomPrompt();
-    prompt.value = fetchedPrompt ?? "No prompt found";
-    isLoading.value = false;
-    print('........HI........') ;
-    print(prompt.value);
+  Future<void> fetchRandomPrompt() async {
+    try {
+      isLoading.value = true;
+      final fetchedPrompt = await FirestoreService().getRandomPrompt();
+      prompt.value = fetchedPrompt ?? "No prompt found";
+    } finally {
+      isLoading.value = false;
+      isRefreshing.value = false;
+    }
+  }
+
+  void schedulePromptRefresh() {
+    _refreshTimer = Timer.periodic(Duration(hours: 3), (timer) {
+      fetchRandomPrompt();
+    });
+  }
+
+  void startAudioDropAnimation() {
+    final random = Random();
+    final appColors = AppColors.of(Get.context!);
+    
+    // Clear previous animations
+    audioDropAnimations.clear();
+    
+    // Add 3-5 random audio drop animations
+    for (int i = 0; i < 3 + random.nextInt(3); i++) {
+      final size = 10.0 + random.nextDouble() * 20;
+      final left = random.nextDouble() * Get.width * 0.8;
+      final duration = 800 + random.nextInt(800);
+      
+      audioDropAnimations.add(
+        Positioned(
+          left: left,
+          top: -size,
+          child: TweenAnimationBuilder(
+            tween: Tween<double>(begin: -size, end: Get.height),
+            duration: Duration(milliseconds: duration),
+            builder: (context, value, child) {
+              return Positioned(
+                top: value,
+                left: left,
+                child: Opacity(
+                  opacity: 1 - (value / Get.height),
+                  child: Icon(
+                    Icons.music_note,
+                    size: size,
+                    color: appColors.audio1TopLeftColor,
+                  ),
+                ),
+              );
+            },
+            onEnd: () {
+              audioDropAnimations.removeWhere((element) => element == audioDropAnimations[i]);
+            },
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -202,367 +253,375 @@ class HomePage extends GetItHook {
     final appStyles = AppStyles.of(context);
     return Scaffold(
       backgroundColor: appColors.white,
-      // appBar: AppBar(
-      //   backgroundColor: appColors.white,
-      //   surfaceTintColor: appColors.white,
-      //   centerTitle: false,
-      //   leading: null,
-      //   actions: [
-      //     Obx(() {
-      //       return selectedIndex.value == 2
-      //           ? Text(
-      //               AppStrings.T.edit,
-      //               style: appStyles.s20w700Black.copyWith(
-      //                   letterSpacing: -0.5, fontWeight: FontWeight.w300),
-      //             )
-      //           : SizedBox();
-      //     }),
-      //     Gap(20)
-      //   ],
-      //   title: ImageView(
-      //     imagePath: Assets.png.frame2.path,
-      //     width: 110,
-      //     color: appColors.black,
-      //   ),
-      // ),
       body: Padding(
         padding: EdgeInsets.zero,
         child: Obx(() {
-          return IndexedStack(index: selectedIndex.value, children: [
-            Padding(
-              padding: EdgeInsets.zero,
-              child: Column(
+          return Stack(
+            children: [
+              IndexedStack(
+                index: selectedIndex.value,
                 children: [
-                  Gap(MediaQuery.of(context).padding.top),
                   Padding(
-                    padding: AppEdgeInsets.h16(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    padding: EdgeInsets.zero,
+                    child: Column(
                       children: [
-                        ImageView(
-                          imagePath: Assets.png.frame2.path,
-                          width: Constants.appBarHeaderImagesize,
-                          color: appColors.black,
-                          alignment: Alignment.centerLeft,
-                          margin: EdgeInsets.zero,
+                        Gap(MediaQuery.of(context).padding.top),
+                        Padding(
+                          padding: AppEdgeInsets.h16(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ImageView(
+                                imagePath: Assets.png.frame2.path,
+                                width: Constants.appBarHeaderImagesize,
+                                color: appColors.black,
+                                alignment: Alignment.centerLeft,
+                                margin: EdgeInsets.zero,
+                              ),
+                              Obx(() {
+                                return selectedIndex.value == 2
+                                    ? Text(
+                                        AppStrings.T.edit,
+                                        style: appStyles.s20w700Black.copyWith(
+                                            letterSpacing: -0.5,
+                                            fontWeight: FontWeight.w300),
+                                      )
+                                    : SizedBox();
+                              }),
+                              InkWell(
+                                onTap: () async {
+                                  await AuthService.instance.signOut();
+                                  Get.offAllNamed(AppRoutes.login);
+                                },
+                                child: Icon(Icons.logout, color: Colors.black),
+                              )
+                            ],
+                          ),
                         ),
-                        Obx(() {
-                          return selectedIndex.value == 2
-                              ? Text(
-                                  AppStrings.T.edit,
-                                  style: appStyles.s20w700Black.copyWith(
-                                      letterSpacing: -0.5,
-                                      fontWeight: FontWeight.w300),
-                                )
-                              : SizedBox();
-                        }),
-                        // Gap(20)
-                        InkWell(
-                          onTap: ()async{
-                            await AuthService.instance.signOut();
-                            Get.offAllNamed(AppRoutes.login);
-                          },
-                          child: Icon(Icons.logout,color: Colors.black,),
-                        )
+                        Gap(10),
+                        Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: () async {
+                              isRefreshing.value = true;
+                              await fetchRandomPrompt();
+                            },
+                            child: ListView(
+                              padding: AppEdgeInsets.h16(),
+                              children: [
+                                SizedBox(
+                                  height: 105,
+                                  child: ListView.separated(
+                                    shrinkWrap: true,
+                                    itemCount: 5,
+                                    padding: EdgeInsets.zero,
+                                    scrollDirection: Axis.horizontal,
+                                    separatorBuilder: (context, i) => Gap(15),
+                                    itemBuilder: (context, index) {
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 35,
+                                            foregroundImage:
+                                                AssetImage(assets[index]),
+                                          ),
+                                          Gap(7),
+                                          Text(
+                                            names[index],
+                                            style: appStyles.s18w400Text
+                                                .copyWith(color: appColors.black),
+                                          )
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                                Gap(18),
+                                borderContainer(
+                                  padding: AppEdgeInsets.all16(),
+                                  boxShadow: Utils.boxShadow,
+                                  colors: [
+                                    appColors.normalWhiteGradientColor,
+                                    appColors.normalBlueGradientColor,
+                                  ],
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        AppStrings.T.rollingVoyzis,
+                                        style: appStyles.s20w700White
+                                            .copyWith(
+                                                color: appColors.black,
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.w600),
+                                      ),
+                                      Gap(5),
+                                      Text(
+                                        prompt.value,
+                                        style: appStyles.s18w400Text.copyWith(
+                                          color: appColors.black,
+                                          height: 1.2,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                      Gap(15),
+                                      Container(
+                                        padding: AppEdgeInsets.all16() +
+                                            EdgeInsets.symmetric(vertical: 3),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              appColors.audio1TopLeftColor,
+                                              appColors.audio1BottomRightColor,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Gap(10),
+                                            WaveShapes(appColors: appColors),
+                                            Gap(10),
+                                            isPlaying[2].value
+                                                ? pauseButton(
+                                                    appColors: appColors,
+                                                    onTap: () {
+                                                      rollingPlay(0);
+                                                    })
+                                                : ImageView(
+                                                    imagePath: Assets
+                                                        .png.playIcon.path,
+                                                    height: playIconHeight,
+                                                    onTap: () {
+                                                      rollingPlay(0);
+                                                    },
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                      Gap(10),
+                                      Container(
+                                        padding: AppEdgeInsets.all16() +
+                                            EdgeInsets.symmetric(vertical: 3),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              appColors.audio2TopLeftColor,
+                                              appColors.audio2BottomRightColor,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Gap(10),
+                                            WaveShapes(appColors: appColors),
+                                            Gap(10),
+                                            isPlaying[3].value
+                                                ? pauseButton(
+                                                    appColors: appColors,
+                                                    onTap: () {
+                                                      rollingPlay(1);
+                                                    })
+                                                : ImageView(
+                                                    imagePath: Assets
+                                                        .png.playIcon.path,
+                                                    height: playIconHeight,
+                                                    onTap: () {
+                                                      rollingPlay(1);
+                                                    },
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                      Gap(5),
+                                    ],
+                                  ),
+                                  appColors: appColors,
+                                ),
+                                Gap(18),
+                                borderContainer(
+                                  boxShadow: Utils.boxShadow,
+                                  colors: [
+                                    appColors.normalWhiteGradientColor,
+                                    appColors.normalBlueGradientColor,
+                                  ],
+                                  padding: AppEdgeInsets.all16() -
+                                      const EdgeInsets.only(right: 10),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            AppStrings.T.localVoyzis,
+                                            style: appStyles.s20w700White
+                                                .copyWith(
+                                              color: appColors.black,
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Gap(10),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Flexible(
+                                            child: Column(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      AppEdgeInsets.all16() -
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 5),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        appColors
+                                                            .audio2TopLeftColor,
+                                                        appColors
+                                                            .audio2BottomRightColor,
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment
+                                                          .bottomRight,
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Gap(10),
+                                                      smallWaveShapes(
+                                                          appColors: appColors),
+                                                      Gap(15),
+                                                      isPlaying[0].value
+                                                          ? pauseButton(
+                                                              appColors:
+                                                                  appColors,
+                                                              onTap: () {
+                                                                localPlay(0);
+                                                              })
+                                                          : ImageView(
+                                                              imagePath: Assets
+                                                                  .png.playIcon
+                                                                  .path,
+                                                              height:
+                                                                  playIconHeight,
+                                                              onTap: () {
+                                                                localPlay(0);
+                                                              },
+                                                            ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Container(
+                                                  padding:
+                                                      AppEdgeInsets.all16() -
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 5),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        appColors
+                                                            .audio1TopLeftColor,
+                                                        appColors
+                                                            .audio1BottomRightColor,
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment
+                                                          .bottomRight,
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Gap(10),
+                                                      smallWaveShapes(
+                                                          appColors: appColors),
+                                                      Gap(15),
+                                                      isPlaying[1].value
+                                                          ? pauseButton(
+                                                              appColors:
+                                                                  appColors,
+                                                              onTap: () {
+                                                                localPlay(1);
+                                                              })
+                                                          : ImageView(
+                                                              imagePath: Assets
+                                                                  .png.playIcon
+                                                                  .path,
+                                                              height:
+                                                                  playIconHeight,
+                                                              onTap: () {
+                                                                localPlay(1);
+                                                              },
+                                                            ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: ImageView(
+                                              imagePath: Assets.png.map.path,
+                                              fit: BoxFit.contain,
+                                              margin: AppEdgeInsets.all4(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  appColors: appColors,
+                                ),
+                                Gap(18),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Gap(10),
-                  Expanded(
-                    child: ListView(
-                      padding: AppEdgeInsets.h16(),
-                      children: [
-                        SizedBox(
-                          height: 105,
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            itemCount: 5,
-                            padding: EdgeInsets.zero,
-                            scrollDirection: Axis.horizontal,
-                            separatorBuilder: (context, i) => Gap(15),
-                            itemBuilder: (context, index) {
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 35,
-                                    foregroundImage: AssetImage(assets[index]),
-                                  ),
-                                  Gap(7),
-                                  Text(
-                                    names[index],
-                                    style: appStyles.s18w400Text
-                                        .copyWith(color: appColors.black),
-                                  )
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                        Gap(18),
-                        borderContainer(
-                          padding: AppEdgeInsets.all16(),
-                          boxShadow: Utils.boxShadow,
-                          colors: [
-                            appColors.normalWhiteGradientColor,
-                            appColors.normalBlueGradientColor,
-                          ],
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    AppStrings.T.rollingVoyzis,
-                                    style: appStyles.s20w700White.copyWith(
-                                        color: appColors.black,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  ImageView(
-                                    imagePath: Assets.png.dice.path,
-                                    height: 50,
-                                  )
-                                ],
-                              ),
-                              Gap(5),
-                              Text(
-                                AppStrings
-                                    .T.whatsAMomentYouKnewYouFkdUpInstantly,
-                                style: appStyles.s18w400Text.copyWith(
-                                  color: appColors.black,
-                                  height: 1.2,
-                                  fontSize: 20,
-                                ),
-                              ),
-                              Gap(15),
-                              Container(
-                                padding: AppEdgeInsets.all16() +
-                                    EdgeInsets.symmetric(vertical: 3),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      appColors.audio1TopLeftColor,
-                                      appColors.audio1BottomRightColor,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Gap(10),
-                                    WaveShapes(appColors: appColors),
-                                    Gap(10),
-                                    isPlaying[2].value
-                                        ? pauseButton(
-                                            appColors: appColors,
-                                            onTap: () {
-                                              rollingPlay(0);
-                                            })
-                                        : ImageView(
-                                            imagePath: Assets.png.playIcon.path,
-                                            height: playIconHeight,
-                                            onTap: () {
-                                              rollingPlay(0);
-                                            },
-                                          ),
-                                  ],
-                                ),
-                              ),
-                              Gap(10),
-                              Container(
-                                padding: AppEdgeInsets.all16() +
-                                    EdgeInsets.symmetric(vertical: 3),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      appColors.audio2TopLeftColor,
-                                      appColors.audio2BottomRightColor,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Gap(10),
-                                    WaveShapes(appColors: appColors),
-                                    Gap(10),
-                                    isPlaying[3].value
-                                        ? pauseButton(
-                                            appColors: appColors,
-                                            onTap: () {
-                                              rollingPlay(1);
-                                            })
-                                        : ImageView(
-                                            imagePath: Assets.png.playIcon.path,
-                                            height: playIconHeight,
-                                            onTap: () {
-                                              rollingPlay(1);
-                                            },
-                                          ),
-                                  ],
-                                ),
-                              ),
-                              Gap(5),
-                            ],
-                          ),
-                          appColors: appColors,
-                        ),
-                        Gap(18),
-                        borderContainer(
-                          boxShadow: Utils.boxShadow,
-                          colors: [
-                            appColors.normalWhiteGradientColor,
-                            appColors.normalBlueGradientColor,
-                          ],
-                          padding: AppEdgeInsets.all16() -
-                              const EdgeInsets.only(right: 10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  // Gap(10),
-                                  Text(
-                                    AppStrings.T.localVoyzis,
-                                    style: appStyles.s20w700White.copyWith(
-                                      color: appColors.black,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Gap(10),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  // Gap(10),
-                                  Flexible(
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          padding: AppEdgeInsets.all16() -
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 5),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                appColors.audio2TopLeftColor,
-                                                appColors
-                                                    .audio2BottomRightColor,
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Gap(10),
-                                              smallWaveShapes(
-                                                  appColors: appColors),
-                                              Gap(15),
-                                              isPlaying[0].value
-                                                  ? pauseButton(
-                                                      appColors: appColors,
-                                                      onTap: () {
-                                                        localPlay(0);
-                                                      })
-                                                  : ImageView(
-                                                      imagePath: Assets
-                                                          .png.playIcon.path,
-                                                      height: playIconHeight,
-                                                      onTap: () {
-                                                        localPlay(0);
-                                                      },
-                                                    ),
-                                            ],
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Container(
-                                          padding: AppEdgeInsets.all16() -
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 5),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                appColors.audio1TopLeftColor,
-                                                appColors
-                                                    .audio1BottomRightColor,
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Gap(10),
-                                              smallWaveShapes(
-                                                  appColors: appColors),
-                                              Gap(15),
-                                              isPlaying[1].value
-                                                  ? pauseButton(
-                                                      appColors: appColors,
-                                                      onTap: () {
-                                                        localPlay(1);
-                                                      })
-                                                  : ImageView(
-                                                      imagePath: Assets
-                                                          .png.playIcon.path,
-                                                      height: playIconHeight,
-                                                      onTap: () {
-                                                        localPlay(1);
-                                                      },
-                                                    ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: ImageView(
-                                      imagePath: Assets.png.map.path,
-                                      fit: BoxFit.contain,
-                                      margin: AppEdgeInsets.all4(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          appColors: appColors,
-                        ),
-                        Gap(18),
-                      ],
+                  LocalVoyzi(
+                    selectedIndex: selectedIndex,
+                    stopAllPlayers: stopAllPlayers,
+
+                  ),
+                  Inbox(
+                    selectedIndex: selectedIndex,
+                  ),
+                  Center(
+                    child: Text(
+                      'Profile',
+                      style: appStyles.s26w700White
+                          .copyWith(color: appColors.black),
                     ),
                   ),
                 ],
               ),
-            ),
-            LocalVoyzi(
-              selectedIndex: selectedIndex,
-              stopAllPlayers: stopAllPlayers,
-            ),
-            Inbox(
-              selectedIndex: selectedIndex,
-            ),
-            Center(
-              child: Text(
-                'Profile',
-                style: appStyles.s26w700White.copyWith(color: appColors.black),
-              ),
-            ),
-          ]);
+              // Audio drop animations
+              ...audioDropAnimations,
+            ],
+          );
         }),
       ),
       bottomNavigationBar: Container(
@@ -717,4 +776,8 @@ class HomePage extends GetItHook {
       ),
     );
   }
+}
+
+class RefreshController {
+  void reset() {}
 }

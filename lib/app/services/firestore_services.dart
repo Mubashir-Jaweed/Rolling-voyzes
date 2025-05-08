@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Get a random prompt from Firestore
   Future<String?> getRandomPrompt() async {
     try {
       QuerySnapshot querySnapshot = await _db.collection('prompts').get();

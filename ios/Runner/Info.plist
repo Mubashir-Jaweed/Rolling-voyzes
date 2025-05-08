@@ -50,6 +50,14 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<key>NSMicrophoneUsageDescription</key>
+<string>This app needs access to microphone to record audio</string>
+<key>UIBackgroundModes</key>
+<key>NSMicrophoneUsageDescription</key>
+<string>This app needs access to microphone to record audio</string>
+<array>
+  <string>audio</string>
+</array>
 		<false/>
 	</dict>
 </plist>
