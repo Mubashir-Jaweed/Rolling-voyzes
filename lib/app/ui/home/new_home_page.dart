@@ -16,6 +16,7 @@ import 'package:voyzi/app/ui/widgets/custom_image_view.dart';
 import 'package:voyzi/app/utils/constants/app_edge_insets.dart';
 import 'package:voyzi/app/utils/constants/app_strings.dart';
 import 'package:voyzi/app/utils/helpers/getItHook/getit_hook.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../../gen/assets.gen.dart';
 import '../../utils/constants/app_constants.dart';
@@ -32,6 +33,12 @@ class HomePage extends GetItHook {
   final RefreshController refreshController = RefreshController();
   RxBool isRefreshing = false.obs;
   RxList<Widget> audioDropAnimations = <Widget>[].obs;
+
+  // Firebase Storage instance
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  
+  // List to store download URLs for rolling voyzis
+  List<String> rollingAudioUrls = [];
 
   Future<void> stopAllPlayers() async {
     for (var player in localAudioPlayers) {
@@ -69,11 +76,6 @@ class HomePage extends GetItHook {
   List<String> locaLaudioAsset = [
     Assets.audio.localVoyzi1,
     Assets.audio.localVoyzi2,
-  ];
-
-  List<String> rollingLaudioAsset = [
-    Assets.audio.rollingVoyzi1,
-    Assets.audio.rollingVoyzi2,
   ];
 
   List<AudioPlayer> localAudioPlayers = [];
@@ -133,14 +135,17 @@ class HomePage extends GetItHook {
         }
       }
 
-      await rollingAudioPlayers[index].setAsset(rollingLaudioAsset[index]);
-      isPlaying[rollingIndex].value = true;
-      await rollingAudioPlayers[index].play();
+      if (rollingAudioUrls.isNotEmpty && index < rollingAudioUrls.length) {
+        await rollingAudioPlayers[index].setUrl(rollingAudioUrls[index]);
+        isPlaying[rollingIndex].value = true;
+        await rollingAudioPlayers[index].play();
+      }
     }
   }
 
   void initializePlayers() {
-    for (int i = 0; i < rollingLaudioAsset.length; i++) {
+    // Initialize with 2 rolling audio players (same as before)
+    for (int i = 0; i < 2; i++) {
       rollingAudioPlayers.add(AudioPlayer());
       isPlaying.add(false.obs);
     }
@@ -180,6 +185,7 @@ class HomePage extends GetItHook {
     initializePlayers();
     setupCompletionListeners();
     fetchRandomPrompt();
+    fetchRandomRecordings(); // Fetch random recordings from Firebase
     schedulePromptRefresh();
   }
 
@@ -198,9 +204,42 @@ class HomePage extends GetItHook {
     }
   }
 
+  Future<void> fetchRandomRecordings() async {
+    try {
+      final ref = _storage.ref().child('recordings/global');
+      
+      final result = await ref.listAll();
+      
+      final items = result.items;
+      
+      if (items.isNotEmpty) {
+        items.shuffle();
+        
+        final selectedItems = items.take(2).toList();
+        
+        rollingAudioUrls.clear();
+        for (final item in selectedItems) {
+          final url = await item.getDownloadURL();
+          rollingAudioUrls.add(url);
+        }
+        
+        dev.log('Fetched ${rollingAudioUrls.length} random recordings');
+      } else {
+        dev.log('No recordings found in Firebase Storage');
+      }
+    } catch (e) {
+      dev.log('Error fetching recordings: $e');
+      rollingAudioUrls = [
+        Assets.audio.rollingVoyzi1,
+        Assets.audio.rollingVoyzi2,
+      ];
+    }
+  }
+
   void schedulePromptRefresh() {
     _refreshTimer = Timer.periodic(Duration(hours: 3), (timer) {
       fetchRandomPrompt();
+      fetchRandomRecordings(); 
     });
   }
 
@@ -208,10 +247,8 @@ class HomePage extends GetItHook {
     final random = Random();
     final appColors = AppColors.of(Get.context!);
     
-    // Clear previous animations
     audioDropAnimations.clear();
     
-    // Add 3-5 random audio drop animations
     for (int i = 0; i < 3 + random.nextInt(3); i++) {
       final size = 10.0 + random.nextDouble() * 20;
       final left = random.nextDouble() * Get.width * 0.8;
@@ -304,6 +341,7 @@ class HomePage extends GetItHook {
                             onRefresh: () async {
                               isRefreshing.value = true;
                               await fetchRandomPrompt();
+                              await fetchRandomRecordings();
                             },
                             child: ListView(
                               padding: AppEdgeInsets.h16(),
@@ -604,7 +642,6 @@ class HomePage extends GetItHook {
                   LocalVoyzi(
                     selectedIndex: selectedIndex,
                     stopAllPlayers: stopAllPlayers,
-
                   ),
                   Inbox(
                     selectedIndex: selectedIndex,
