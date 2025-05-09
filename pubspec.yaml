@@ -42,11 +42,10 @@ dependencies:
   get_it: ^8.0.1
   injectable: ^2.5.0
   retrofit: ^4.4.1
-  permission_handler: ^10.4.0
+  permission_handler: ^11.0.0
   json_annotation: ^4.9.0
   shared_preferences: ^2.3.3
   crypto: ^3.0.6
-  record: ^4.0.0
   path_provider: ^2.1.5
   collection: ^1.18.0
   gap: ^3.0.1
@@ -54,12 +53,14 @@ dependencies:
   flutter_svg: ^2.0.16
   just_audio: ^0.9.34
   flutter_easyloading: ^3.0.5
+  flutter_sound: ^9.2.13
   firebase_core: ^2.14.0
   firebase_auth: ^4.7.0
   cloud_firestore: ^4.8.0
   firebase_storage: ^11.6.0
   path: ^1.9.1
   uuid: ^4.4.2 
+  record: ^6.0.0
 
 dev_dependencies:
   flutter_test:

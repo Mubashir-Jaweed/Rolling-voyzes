@@ -25,17 +25,19 @@ class ControlledLottieAnimationController {
 }
 
 class LocalVoyzi extends GetItHook<VoiceRecorderController> {
-  LocalVoyzi({super.key, required this.selectedIndex, required this.stopAllPlayers});
+  LocalVoyzi(
+      {super.key, required this.selectedIndex, required this.stopAllPlayers});
 
   final ControlledLottieAnimationController lottiePlayPauseController =
       ControlledLottieAnimationController();
 
-  final RxInt selectedIndex;
-  final Function() stopAllPlayers;
+  RxInt selectedIndex;
+  Function() stopAllPlayers;
   late ControlledLottieAnimationController lottieController =
       ControlledLottieAnimationController();
 
   @override
+  // TODO: implement canDisposeController
   bool get canDisposeController => false;
 
   String formatTime(int seconds) {
@@ -100,6 +102,11 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
                                   ),
                                 ),
                                 Gap(5),
+                                // ImageView(
+                                //   imagePath: Assets.png.localVoyzi.path,
+                                //   height: 40,
+                                // ),
+                                // Gap(20),
                                 Expanded(
                                     child: Text(
                                   AppStrings.T
@@ -127,11 +134,11 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
                             child: Row(
                               children: [
                                 Gap(10),
-                                Obx(() => Text(
+                                Text(
                                   controller.selected.value,
                                   style: appStyles.s24w700Black
                                       .copyWith(fontWeight: FontWeight.w400),
-                                )),
+                                ),
                                 const Spacer(),
                                 Builder(builder: (context) {
                                   return GestureDetector(
@@ -199,18 +206,18 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
                           ),
                           Gap(10),
                           const Spacer(),
-                          Obx(() => Text(
+                          Text(
                             controller.recording.value ==
                                         Recording.isRecording ||
                                     controller.recording.value ==
                                         Recording.isPaused ||
                                     controller.recording.value ==
-                                        Recording.isResumed
-                                ? formatTime(controller.secondsElapsed.value)
-                                : formatTime(controller.playbackSecondsElapsed.value),
+                                        Recording.isRecorded
+                                ? formatTime(controller.secondsElapsed)
+                                : formatTime(controller.playbackSecondsElapsed),
                             style: appStyles.s24w700Black
                                 .copyWith(fontWeight: FontWeight.w400),
-                          )),
+                          ),
                           ControlledLottieAnimation(
                             lottiePath: Assets.animation.pulsingAnimation,
                             controller: controller.animationController,
@@ -255,6 +262,7 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
                                 },
                                 child: Container(
                                   padding: AppEdgeInsets.all(radius: 20),
+                                  // color: appColors.red,
                                   child: Container(
                                     height: 220,
                                     padding: AppEdgeInsets.all(radius: 40),
@@ -292,68 +300,57 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
                             ),
                           ),
                           Gap(10),
-                          Obx(() {
-                            if (controller.recording.value == Recording.isRecording ||
-                                controller.recording.value == Recording.isPaused ||
-                                controller.recording.value == Recording.isResumed) {
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      if (controller.recording.value ==
-                                          Recording.isPaused) {
-                                        controller.resumeRecording();
-                                        ControlledLottieAnimationController.play
-                                            ?.call();
-                                      } else {
-                                        ControlledLottieAnimationController.pause
-                                            ?.call();
-                                        controller.pauseRecording();
-                                      }
-                                    },
-                                    child: buttons(
-                                      appStyles: appStyles,
-                                      color1: Color(0xffD171ED),
-                                      color2: Color(0xff9466EC),
-                                      text: controller.recording.value == Recording.isPaused
-                                          ? AppStrings.T.resume
-                                          : AppStrings.T.pause,
+                          controller.recording.value == Recording.isRecording ||
+                                  controller.recording.value ==
+                                      Recording.isPaused ||
+                                  controller.recording.value ==
+                                      Recording.isResumed
+                              // controller.recording.value != Recording.initial
+                              ? Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        if (controller.recording.value ==
+                                            Recording.isPaused) {
+                                          controller.resumeRecording();
+                                          ControlledLottieAnimationController
+                                              .play
+                                              ?.call();
+                                        } else {
+                                          ControlledLottieAnimationController
+                                              .pause
+                                              ?.call();
+                                          controller.pauseRecording();
+                                        }
+                                      },
+                                      child: buttons(
+                                        appStyles: appStyles,
+                                        color1: Color(0xffD171ED),
+                                        color2: Color(0xff9466EC),
+                                        text: controller.isRecording.value
+                                            ? AppStrings.T.pause
+                                            : AppStrings.T.resume,
+                                      ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      ControlledLottieAnimationController.reset
-                                          ?.call();
-                                      controller.retakeRecording();
-                                    },
-                                    child: buttons(
-                                      appStyles: appStyles,
-                                      color1: Color(0xff4490FA),
-                                      color2: Color(0xff4490FA),
-                                      text: AppStrings.T.retake,
+                                    GestureDetector(
+                                      onTap: () {
+                                        ControlledLottieAnimationController
+                                            .reset
+                                            ?.call();
+                                        controller.retakeRecording();
+                                      },
+                                      child: buttons(
+                                        appStyles: appStyles,
+                                        color1: Color(0xff4490FA),
+                                        color2: Color(0xff4490FA),
+                                        text: AppStrings.T.retake,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            } else if (controller.recording.value == Recording.isRecorded) {
-                              return GestureDetector(
-                                onTap: () async {
-                                  final url = await controller.uploadRecording();
-                                  if (url != null) {
-                                    Get.snackbar('Success', 'Recording uploaded successfully');
-                                  }
-                                },
-                                child: buttons(
-                                  appStyles: appStyles,
-                                  color1: Color(0xff4CAF50),
-                                  color2: Color(0xff2E7D32),
-                                  text: 'Upload',
-                                ),
-                              );
-                            }
-                            return SizedBox();
-                          }),
+                                  ],
+                                )
+                              : SizedBox(),
                           Gap(15),
                           Text(
                             "${AppStrings.T.upTo} 1 ${AppStrings.T.minute}",
@@ -363,7 +360,7 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
                             ),
                           ),
                           Gap(5),
-                        ],
+                        ], //
                       );
                     }),
                   ),
@@ -376,17 +373,19 @@ class LocalVoyzi extends GetItHook<VoiceRecorderController> {
     });
   }
 
-  Widget buttons({
-    required AppStyles appStyles,
-    required Color color1,
-    required Color color2,
-    required String text,
-  }) {
+  Widget buttons(
+      {required AppStyles appStyles,
+      required Color color1,
+      required Color color2,
+      required String text}) {
     return Container(
       padding: AppEdgeInsets.all16() + EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color1, color2],
+            colors: [
+              color1,
+              color2,
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -469,7 +468,8 @@ class ControlledLottieAnimation extends StatefulWidget {
 class _ControlledLottieAnimationState extends State<ControlledLottieAnimation>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  BoxConstraints constraints = BoxConstraints(minHeight: 220, maxHeight: 320);
+
+  bool isPlaying = true;
 
   @override
   void initState() {
@@ -486,6 +486,14 @@ class _ControlledLottieAnimationState extends State<ControlledLottieAnimation>
     };
   }
 
+  BoxConstraints constraints = BoxConstraints(minHeight: 220, maxHeight: 320);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -493,6 +501,8 @@ class _ControlledLottieAnimationState extends State<ControlledLottieAnimation>
       children: [
         Container(
           constraints: constraints,
+          // color: Colors.red,
+          // alignment: Alignment.center,
           child: Lottie.asset(
             widget.lottiePath,
             height: 300,
