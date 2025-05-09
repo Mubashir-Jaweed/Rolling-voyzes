@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
@@ -13,7 +15,7 @@ class AuthService {
       UserCredential userCredential = await _auth.signInAnonymously();
       return userCredential.user;
     } catch (e) {
-      Get.snackbar("Error", "Failed to sign in anonymously: $e");
+      log("Error Failed to sign in anonymously: $e");
       return null;
     }
   }

@@ -1,0 +1,2 @@
+C:/Users/Wajiz.pk/Downloads/voyzi_flutter/kmphitech-voyzi_flutter-f645b7810b32/android/app/.cxx/RelWithDebInfo/195g1g41/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Wajiz.pk/Downloads/voyzi_flutter/kmphitech-voyzi_flutter-f645b7810b32/android/app/.cxx/RelWithDebInfo/195g1g41/armeabi-v7a/CMakeFiles/rebuild_cache.dir

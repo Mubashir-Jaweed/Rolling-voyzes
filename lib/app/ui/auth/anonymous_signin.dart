@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -18,23 +20,48 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
   bool isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<void> signInAnonymously() async {
-    setState(() => isLoading = true);
-    try {
-      User? user = await AuthService.instance.signInAnonymously();
-       if (user != null) {
-      print('Signed in as: ${user?.uid}');
-      Get.offAllNamed(AppRoutes.home); 
-    } else {
-      Get.snackbar("Error", "User is null after sign-in : TRY AGAIN");
-    }
-    } catch (e) {
-      Get.snackbar("Error", "Failed to sign in anonymously");
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
+//  Future<void> signInAnonymously() async {
+//   final user  = await AuthService.instance.signInAnonymously();
+//   log("user: $user");
+//   // setState(() => isLoading = true);
+//   // try {
+//   //   User? user = await AuthService.instance.signInAnonymously();
+//   //   log('user : $user');
+//   //   if (user != null) {
+//   //     print('Signed in as: ${user.uid}');
+//   //     Get.offAllNamed(AppRoutes.home); 
+//   //   } else {
+//   //     Get.snackbar("Error", "Failed to sign sdsd in: User is null");
+//   //   }
+//   // } catch (e) {
+//   //   log('error :$e');
+//   //   Get.snackbar(
+//   //     "Error", 
+//   //     "Failed to sign in nikal anonymously: ${e.toString()}",
+//   //     snackPosition: SnackPosition.BOTTOM,
+//   //   );
+//   //   print('Sign-in error: $e');
+//   // } finally {
+//   //   if (mounted) {
+//   //     setState(() => isLoading = false);
+//   //   }
+//   // }
+// }
 
+
+Future<void> signInAnonymously() async {
+  final user = await AuthService.instance.signInAnonymously();
+  log('..............:${user}');
+  if(FirebaseAuth.instance.currentUser != null){
+    Get.offAllNamed(AppRoutes.home);
+  }else{
+    Get.snackbar(
+      "Error", 
+      "Failed to sign in  anonymously: "
+    );
+  }
+  
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +81,9 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
             isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: signInAnonymously,
+                    onPressed: ()async{
+                      await signInAnonymously();
+                    },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 40, vertical: 15),
