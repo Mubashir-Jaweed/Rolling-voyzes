@@ -86,65 +86,59 @@ class HomePage extends GetItHook {
   List<RxBool> isPlaying = [];
 
   Future<void> localPlay(int index) async {
-    if (localAudioPlayers[index].playing) {
-      dev.log("Stop Local $index");
+    try {
+      if (localAudioPlayers[index].playing) {
+        dev.log("Stop Local $index");
+        isPlaying[index].value = false;
+        await localAudioPlayers[index].pause();
+      } else {
+        dev.log("Play Local $index");
+        startAudioDropAnimation();
+
+        // Stop all other players
+        await stopAllPlayers();
+
+        await localAudioPlayers[index].setAsset(locaLaudioAsset[index]);
+        isPlaying[index].value = true;
+        await localAudioPlayers[index].play();
+      }
+    } catch (e) {
+      dev.log("Error in localPlay: $e");
       isPlaying[index].value = false;
-      await localAudioPlayers[index].pause();
-    } else {
-      dev.log("Play Local $index");
-      startAudioDropAnimation();
-
-      for (int i = 0; i < rollingAudioPlayers.length; i++) {
-        await rollingAudioPlayers[i].pause();
-        isPlaying[i + localAudioPlayers.length].value = false;
-      }
-
-      for (int i = 0; i < localAudioPlayers.length; i++) {
-        if (i != index) {
-          await localAudioPlayers[i].pause();
-          isPlaying[i].value = false;
-        }
-      }
-
-      await localAudioPlayers[index].setAsset(locaLaudioAsset[index]);
-      isPlaying[index].value = true;
-      await localAudioPlayers[index].play();
     }
   }
 
   Future<void> rollingPlay(int index) async {
-    final rollingIndex = index + localAudioPlayers.length;
+    try {
+      final rollingIndex = index + localAudioPlayers.length;
 
-    if (rollingAudioPlayers[index].playing) {
-      dev.log("Stop Rolling $index");
-      isPlaying[rollingIndex].value = false;
-      await rollingAudioPlayers[index].pause();
-    } else {
-      dev.log("Play Rolling $index");
-      startAudioDropAnimation();
+      if (rollingAudioPlayers[index].playing) {
+        dev.log("Stop Rolling $index");
+        isPlaying[rollingIndex].value = false;
+        await rollingAudioPlayers[index].pause();
+      } else {
+        dev.log("Play Rolling $index");
+        startAudioDropAnimation();
 
-      for (int i = 0; i < localAudioPlayers.length; i++) {
-        await localAudioPlayers[i].pause();
-        isPlaying[i].value = false;
-      }
+        // Stop all other players
+        await stopAllPlayers();
 
-      for (int i = 0; i < rollingAudioPlayers.length; i++) {
-        if (i != index) {
-          await rollingAudioPlayers[i].pause();
-          isPlaying[i + localAudioPlayers.length].value = false;
+        if (rollingAudioUrls.isNotEmpty && index < rollingAudioUrls.length) {
+          await rollingAudioPlayers[index].setUrl(rollingAudioUrls[index]);
+          isPlaying[rollingIndex].value = true;
+          await rollingAudioPlayers[index].play();
+        } else {
+          dev.log("No audio URL available for index $index");
         }
       }
-
-      if (rollingAudioUrls.isNotEmpty && index < rollingAudioUrls.length) {
-        await rollingAudioPlayers[index].setUrl(rollingAudioUrls[index]);
-        isPlaying[rollingIndex].value = true;
-        await rollingAudioPlayers[index].play();
-      }
+    } catch (e) {
+      dev.log("Error in rollingPlay: $e");
+      isPlaying[index + localAudioPlayers.length].value = false;
     }
   }
 
   void initializePlayers() {
-    // Initialize with 2 rolling audio players (same as before)
+    // Initialize with 2 rolling audio players
     for (int i = 0; i < 2; i++) {
       rollingAudioPlayers.add(AudioPlayer());
       isPlaying.add(false.obs);
@@ -185,7 +179,7 @@ class HomePage extends GetItHook {
     initializePlayers();
     setupCompletionListeners();
     fetchRandomPrompt();
-    fetchRandomRecordings(); // Fetch random recordings from Firebase
+    fetchRandomRecordings();
     schedulePromptRefresh();
   }
 
@@ -198,6 +192,9 @@ class HomePage extends GetItHook {
       isLoading.value = true;
       final fetchedPrompt = await FirestoreService().getRandomPrompt();
       prompt.value = fetchedPrompt ?? "No prompt found";
+    } catch (e) {
+      dev.log("Error fetching prompt: $e");
+      prompt.value = "Error loading prompt";
     } finally {
       isLoading.value = false;
       isRefreshing.value = false;
@@ -207,14 +204,11 @@ class HomePage extends GetItHook {
   Future<void> fetchRandomRecordings() async {
     try {
       final ref = _storage.ref().child('recordings/global');
-      
       final result = await ref.listAll();
-      
       final items = result.items;
       
       if (items.isNotEmpty) {
         items.shuffle();
-        
         final selectedItems = items.take(2).toList();
         
         rollingAudioUrls.clear();
@@ -226,9 +220,15 @@ class HomePage extends GetItHook {
         dev.log('Fetched ${rollingAudioUrls.length} random recordings');
       } else {
         dev.log('No recordings found in Firebase Storage');
+        // Fallback to local assets if no recordings found
+        rollingAudioUrls = [
+          Assets.audio.rollingVoyzi1,
+          Assets.audio.rollingVoyzi2,
+        ];
       }
     } catch (e) {
       dev.log('Error fetching recordings: $e');
+      // Fallback to local assets if error occurs
       rollingAudioUrls = [
         Assets.audio.rollingVoyzi1,
         Assets.audio.rollingVoyzi2,
@@ -237,6 +237,7 @@ class HomePage extends GetItHook {
   }
 
   void schedulePromptRefresh() {
+    _refreshTimer?.cancel(); // Cancel existing timer if any
     _refreshTimer = Timer.periodic(Duration(hours: 3), (timer) {
       fetchRandomPrompt();
       fetchRandomRecordings(); 
@@ -258,15 +259,19 @@ class HomePage extends GetItHook {
         Positioned(
           left: left,
           top: -size,
-          child: TweenAnimationBuilder(
-            tween: Tween<double>(begin: -size, end: Get.height),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: Get.height + size),
             duration: Duration(milliseconds: duration),
             builder: (context, value, child) {
+              // Calculate opacity - ensure it stays between 0.0 and 1.0
+              double opacity = 1.0 - (value / (Get.height + size));
+              opacity = opacity.clamp(0.0, 1.0);
+              
               return Positioned(
-                top: value,
+                top: value - size,
                 left: left,
                 child: Opacity(
-                  opacity: 1 - (value / Get.height),
+                  opacity: opacity,
                   child: Icon(
                     Icons.music_note,
                     size: size,
@@ -276,11 +281,24 @@ class HomePage extends GetItHook {
               );
             },
             onEnd: () {
-              audioDropAnimations.removeWhere((element) => element == audioDropAnimations[i]);
+              if (i < audioDropAnimations.length) {
+                audioDropAnimations.removeAt(i);
+              }
             },
           ),
         ),
       );
+    }
+  }
+
+   @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    for (var player in localAudioPlayers) {
+      player.dispose();
+    }
+    for (var player in rollingAudioPlayers) {
+      player.dispose();
     }
   }
 
