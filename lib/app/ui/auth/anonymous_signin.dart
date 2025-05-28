@@ -5,12 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
 import 'package:voyzi/app/services/auth_services.dart';
-import 'package:voyzi/app/ui/widgets/custom_image_view.dart';
-import 'package:voyzi/gen/assets.gen.dart';
+import 'package:voyzi/app/utils/themes/app_theme.dart';
 
 class AnonymousSignin extends StatefulWidget {
   const AnonymousSignin({super.key});
-  
 
   @override
   State<AnonymousSignin> createState() => _AnonymousSigninState();
@@ -18,84 +16,115 @@ class AnonymousSignin extends StatefulWidget {
 
 class _AnonymousSigninState extends State<AnonymousSignin> {
   bool isLoading = false;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isLogin = false;
+  String? error;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-//  Future<void> signInAnonymously() async {
-//   final user  = await AuthService.instance.signInAnonymously();
-//   log("user: $user");
-//   // setState(() => isLoading = true);
-//   // try {
-//   //   User? user = await AuthService.instance.signInAnonymously();
-//   //   log('user : $user');
-//   //   if (user != null) {
-//   //     print('Signed in as: ${user.uid}');
-//   //     Get.offAllNamed(AppRoutes.home); 
-//   //   } else {
-//   //     Get.snackbar("Error", "Failed to sign sdsd in: User is null");
-//   //   }
-//   // } catch (e) {
-//   //   log('error :$e');
-//   //   Get.snackbar(
-//   //     "Error", 
-//   //     "Failed to sign in nikal anonymously: ${e.toString()}",
-//   //     snackPosition: SnackPosition.BOTTOM,
-//   //   );
-//   //   print('Sign-in error: $e');
-//   // } finally {
-//   //   if (mounted) {
-//   //     setState(() => isLoading = false);
-//   //   }
-//   // }
-// }
+  // Future<void> signInAnonymously() async {
+  //   final user = await AuthService.instance.signInAnonymously();
+  //   log('..............:${user}');
+  //   if (FirebaseAuth.instance.currentUser != null) {
+  //     Get.offAllNamed(AppRoutes.home);
+  //   } else {
+  //     Get.snackbar("Error", "Failed to sign in  anonymously: ");
+  //   }
+  // }
 
+  void toggleForm() => setState(() => isLogin = !isLogin);
 
-Future<void> signInAnonymously() async {
-  final user = await AuthService.instance.signInAnonymously();
-  log('..............:${user}');
-  if(FirebaseAuth.instance.currentUser != null){
-    Get.offAllNamed(AppRoutes.home);
-  }else{
-    Get.snackbar(
-      "Error", 
-      "Failed to sign in  anonymously: "
-    );
+  void handleAuth() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    String? result;
+
+    if (!isLogin) {
+      result = await AuthService.instance.signUp(email, password);
+    } else {
+      result = await AuthService.instance.login(email, password);
+    }
+
+    if (result != null) {
+      print('result ..........................................................$result');
+      setState(() => error = result);
+    } else {
+      Get.offAllNamed(AppRoutes.home);
+    }
   }
-  
-}
+
   @override
   Widget build(BuildContext context) {
+    final appColors = AppColors.of(context);
+    final appStyles = AppStyles.of(context);
     return Scaffold(
-      body: Center(
+      backgroundColor: appColors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Logo at the center
-            ImageView(
-              imagePath: Assets.png.appIconWave.path,
-              height: 150,
-              width: 150,
+            Text(
+              isLogin ? 'Login' : "Signup",
+              style: TextStyle(
+                  fontSize: 32,
+                  color: appColors.black,
+                  fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 50),
-            
-            // Sign in button
-            isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: ()async{
-                      await signInAnonymously();
+            SizedBox(
+              height: 20,
+            ),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: "Enter your email"),
+            ),
+            SizedBox(height: 20),
+            TextField(
+              controller: passwordController,
+              decoration: InputDecoration(labelText: "Enter your Password"),
+            ),
+            SizedBox(
+              height:20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '${isLogin ? 'Dont' : 'Already'} have an account ',
+                  style: TextStyle(color: appColors.textColor, fontSize: 16),
+                ),
+                InkWell(
+                    onTap: () {
+                      toggleForm();
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      'Continue as Guest',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
+                    child: Text(
+                      '${isLogin ? "SignUp" : 'Login'}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: appColors.textColor,
+                          fontSize: 16),
+                    )),
+              ],
+            ),
+            SizedBox(height: 20),
+            InkWell(
+              onTap: () {
+                handleAuth();
+              },
+              child: Container(
+                alignment: Alignment.center,
+                height: 40,
+                width: 150,
+                decoration: BoxDecoration(
+                    color: appColors.borderColor,
+                    borderRadius: BorderRadius.circular(50)),
+                child: Text(
+                  isLogin ? "Login" : 'Signup',
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+            )
           ],
         ),
       ),

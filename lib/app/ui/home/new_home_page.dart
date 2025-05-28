@@ -365,7 +365,7 @@ class HomePage extends GetItHook {
                               padding: AppEdgeInsets.h16(),
                               children: [
                                 SizedBox(
-                                  height: 105,
+                                  height: 110,
                                   child: ListView.separated(
                                     shrinkWrap: true,
                                     itemCount: 5,

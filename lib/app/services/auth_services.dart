@@ -39,4 +39,29 @@ class AuthService {
       return null;
     }
   }
+
+  Future<String?> login(String email, String password) async {
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return null; // success
+  } on FirebaseAuthException catch (e) {
+    return e.message;
+  }
+}
+
+Future<String?> signUp(String email, String password) async {
+  try {
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return null; // success
+  } on FirebaseAuthException catch (e) {
+    return e.message;
+  }
+}
+
 }

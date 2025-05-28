@@ -1,0 +1,2 @@
+C:/Users/Wajiz.pk/Downloads/voyzi_flutter/project/android/app/.cxx/Debug/553v3p4b/x86/CMakeFiles/edit_cache.dir
+C:/Users/Wajiz.pk/Downloads/voyzi_flutter/project/android/app/.cxx/Debug/553v3p4b/x86/CMakeFiles/rebuild_cache.dir
