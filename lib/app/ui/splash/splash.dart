@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
@@ -20,6 +21,7 @@ class Splash extends GetItHook {
       Get.offAllNamed(AppRoutes.login);
     }else{
       Get.offAllNamed(AppRoutes.home);
+      
     }
     });
     super.onInit();

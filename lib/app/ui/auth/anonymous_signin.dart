@@ -17,6 +17,7 @@ class AnonymousSignin extends StatefulWidget {
 class _AnonymousSigninState extends State<AnonymousSignin> {
   bool isLoading = false;
   bool isLogin = false;
+  String? result = '';
   String? error;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -33,22 +34,22 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
 
   void toggleForm() => setState(() => isLogin = !isLogin);
 
-  void handleAuth() async {
+  Future<void> handleAuth() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
-    String? result;
-
+  
     if (!isLogin) {
       result = await AuthService.instance.signUp(email, password);
     } else {
       result = await AuthService.instance.login(email, password);
     }
 
-    if (result != null) {
+    if (result == null) {
+      print('loged in successfullt...........................................................................................');
+     Get.offAllNamed(AppRoutes.home);
+    }else{
       print('result ..........................................................$result');
       setState(() => error = result);
-    } else {
-      Get.offAllNamed(AppRoutes.home);
     }
   }
 
@@ -86,6 +87,10 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
             SizedBox(
               height:20,
             ),
+             Text(
+                  '$result',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
