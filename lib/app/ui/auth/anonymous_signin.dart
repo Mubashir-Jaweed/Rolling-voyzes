@@ -37,6 +37,13 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
   Future<void> handleAuth() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
+
+    if(email.isEmpty || password.isEmpty){
+      setState(() {
+      result = 'Email & password required';
+      });
+      return;
+    }
   
     if (!isLogin) {
       result = await AuthService.instance.signUp(email, password);
@@ -89,7 +96,8 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
             ),
              Text(
                   '$result',
-                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16,),
                 ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -182,7 +182,6 @@ class HomePage extends GetItHook {
     fetchRandomPrompt();
     fetchRandomRecordings();
     schedulePromptRefresh();
-    printUserName();
   }
 
   var isLoading = true.obs;
@@ -237,21 +236,12 @@ class HomePage extends GetItHook {
       ];
     }
   }
-void printUserName() {
-  User? user = FirebaseAuth.instance.currentUser;
 
-  if (user != null) {
-    String? name = user.email;
-    print('User name: ${name ?? "No name set"}');
-  } else {
-    print('No user is currently signed in.');
-  }
-}
   void schedulePromptRefresh() {
     _refreshTimer?.cancel(); // Cancel existing timer if any
     _refreshTimer = Timer.periodic(Duration(hours: 3), (timer) {
       fetchRandomPrompt();
-      fetchRandomRecordings(); 
+      // fetchRandomRecordings(); 
     });
   }
 
@@ -369,7 +359,7 @@ void printUserName() {
                           child: RefreshIndicator(
                             onRefresh: () async {
                               isRefreshing.value = true;
-                              await fetchRandomPrompt();
+                              // await fetchRandomPrompt();
                               await fetchRandomRecordings();
                             },
                             child: ListView(
