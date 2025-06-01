@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
@@ -41,27 +42,42 @@ class AuthService {
   }
 
   Future<String?> login(String email, String password) async {
-  try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    return null; // success
-  } on FirebaseAuthException catch (e) {
-    return e.message;
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return null; // success
+    } on FirebaseAuthException catch (e) {
+      return e.message;
+    }
   }
-}
 
-Future<String?> signUp(String email, String password) async {
-  try {
-    await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    return null; // success
-  } on FirebaseAuthException catch (e) {
-    return e.message;
+  Future<String?> signUp(String email, String password) async {
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      User? user = userCredential.user;
+
+      if (user != null) {
+        await saveUserTofirebase(user);
+      }
+      return null; // success
+    } on FirebaseAuthException catch (e) {
+      return e.message;
+    }
   }
-}
 
+  Future<void> saveUserTofirebase(User user) async {
+    final userRef = FirebaseFirestore.instance.collection('users');
+    await userRef.doc(user.uid).set({
+      'uid': user.uid,
+      'name': user.email!.split('@')[0],
+      'email': user.email,
+    });
+  }
 }
