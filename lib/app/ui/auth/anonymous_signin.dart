@@ -84,7 +84,7 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
             ),
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: "Enter your email"),
+              decoration: InputDecoration(labelText: "Enter your email",),
             ),
             SizedBox(height: 20),
             TextField(

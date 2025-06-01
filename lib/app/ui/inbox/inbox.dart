@@ -23,7 +23,9 @@ class Inbox extends GetItHook {
   @override
   // TODO: implement canDisposeController
   bool get canDisposeController => false;
+  final TextEditingController searchQuery = TextEditingController();
 
+ 
   List<String> names = [
     'Eddie',
     'Talayah',
@@ -39,6 +41,26 @@ class Inbox extends GetItHook {
     Assets.png.trey.path,
     Assets.png.eddie.path,
   ];
+
+
+  
+  @override
+  void onInit() {
+    searchQuery.addListener((){
+      String currentQuery = searchQuery.text;
+      searchNewUsers(currentQuery);
+    });
+    super.onInit();
+  }
+
+  void searchNewUsers(String query){
+    print(query);
+  }
+
+void onClose(){
+  searchQuery.dispose();
+  super.onClose();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +110,19 @@ class Inbox extends GetItHook {
                   style: appStyles.s26w700Black
                       .copyWith(fontSize: 45, height: 1.3),
                 ),
+                TextField(
+                  controller: searchQuery,
+                  decoration: InputDecoration(
+                    hintText: 'Find new friends',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                Gap(10),
+
                 // Text(
                 //   AppStrings.T.seeIfYouveBeenHeardOrHaveReplies,
                 //   style:
@@ -408,19 +443,6 @@ class Inbox extends GetItHook {
 //   );
 // }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';

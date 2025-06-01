@@ -78,6 +78,7 @@ class AuthService {
       'uid': user.uid,
       'name': user.email!.split('@')[0],
       'email': user.email,
+      'relations':[]
     });
   }
 }
