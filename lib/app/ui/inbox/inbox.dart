@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
+import 'package:voyzi/app/controller/threads_controller.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
 import 'package:voyzi/app/utils/constants/app_border_radius.dart';
 import 'package:voyzi/app/utils/constants/app_constants.dart';
@@ -24,8 +25,9 @@ class Inbox extends GetItHook {
   // TODO: implement canDisposeController
   bool get canDisposeController => false;
   final TextEditingController searchQuery = TextEditingController();
+  ThreadsControllers threadsControllers = ThreadsControllers();
+  RxList<Map<String, dynamic>> searchedUsers = <Map<String, dynamic>>[].obs;
 
- 
   List<String> names = [
     'Eddie',
     'Talayah',
@@ -42,25 +44,11 @@ class Inbox extends GetItHook {
     Assets.png.eddie.path,
   ];
 
-
-  
-  @override
-  void onInit() {
-    searchQuery.addListener((){
-      String currentQuery = searchQuery.text;
-      searchNewUsers(currentQuery);
-    });
-    super.onInit();
+  void searchNewUsers() async {
+    final results = await threadsControllers.getAllUsers(searchQuery.text);
+    searchedUsers.assignAll(results);
+    print('Fetched ${searchedUsers.length} users');
   }
-
-  void searchNewUsers(String query){
-    print(query);
-  }
-
-void onClose(){
-  searchQuery.dispose();
-  super.onClose();
-}
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +100,11 @@ void onClose(){
                 ),
                 TextField(
                   controller: searchQuery,
+                  onChanged: (value) {
+                    searchNewUsers();
+                  },
                   decoration: InputDecoration(
-                    hintText: 'Find new friends',
+                    hintText: 'Find friends',
                     prefixIcon: Icon(Icons.search),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -334,19 +325,46 @@ void onClose(){
                 ListView.builder(
                   itemCount: 4,
                   shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return replyTile(
-                      imagePath: assets[index],
-                      name: names[index],
-                      minute: index.toString(),
-                      appStyles: appStyles,
-                      appColors: appColors,
-                    );
-                  },
+                  physics: NeverScrollableScrollPhysics(),
+                  itemBuilder: (ctx, index) => replyTile(
+                    imagePath: assets[index],
+                    name: names[index],
+                    minute: index.toString(),
+                    appStyles: appStyles,
+                    appColors: appColors,
+                  ),
                 ),
                 Gap(10),
+
+                Obx(() {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Add new friends',
+                        style: appStyles.s26w700Black.copyWith(
+                          fontSize: 20,
+                          height: 1.3,
+                        ),
+                      ),
+                      ListView.builder(
+                        itemCount: searchedUsers.length,
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemBuilder: (ctx, index) {
+                          final user = searchedUsers[index];
+                          return replyTile(
+                            imagePath: user['avatar'] ?? assets[0], // Fallback
+                            name: user['name'] ?? 'Unknown',
+                            minute: 'now',
+                            appStyles: appStyles,
+                            appColors: appColors,
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ))

@@ -182,6 +182,7 @@ class HomePage extends GetItHook {
     fetchRandomPrompt();
     fetchRandomRecordings();
     schedulePromptRefresh();
+
   }
 
   var isLoading = true.obs;
@@ -291,6 +292,9 @@ class HomePage extends GetItHook {
       );
     }
   }
+
+
+
 
    @override
   void dispose() {
@@ -698,6 +702,7 @@ class HomePage extends GetItHook {
                 child: GestureDetector(
                   onTap: () {
                     selectedIndex.value = 0;
+                    
                   },
                   child: Image.asset(
                     (selectedIndex.value == 0)
@@ -711,6 +716,7 @@ class HomePage extends GetItHook {
                 child: GestureDetector(
                   onTap: () {
                     selectedIndex.value = 1;
+                    
                   },
                   child: Image.asset(
                     (selectedIndex.value == 1)
@@ -724,6 +730,7 @@ class HomePage extends GetItHook {
                 child: GestureDetector(
                   onTap: () {
                     selectedIndex.value = 2;
+                    
                   },
                   child: Image.asset(
                     (selectedIndex.value == 2)
@@ -737,6 +744,7 @@ class HomePage extends GetItHook {
                 child: GestureDetector(
                   onTap: () {
                     selectedIndex.value = 3;
+                    
                   },
                   child: Image.asset(
                     (selectedIndex.value == 3)
