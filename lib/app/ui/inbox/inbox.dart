@@ -51,6 +51,19 @@ class Inbox extends GetItHook {
     print('..............Fetched ${searchedUsers.length} users');
   }
 
+  void createRelation(Map user) async {
+    await threadsControllers.createRelation(user['uid']);
+    searchedUsers
+        .removeAt(searchedUsers.indexWhere((u) => u['uid'] == user['uid']));
+        //snack bar        
+  }
+
+  Future<Map<String, dynamic>> getHomies() async {
+    return threadsControllers.getHomies();
+  }
+
+
+
   void handleSearch(String query) async {
     searchQuery.value = query;
     if (query.isNotEmpty) {
@@ -126,6 +139,41 @@ class Inbox extends GetItHook {
                   ),
                 ),
                 Gap(10),
+
+                FutureBuilder<Map<String, dynamic>>(
+                  future: getHomies(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('No homies found'));
+                    }
+                    final homiesData = snapshot.data!;
+                    final relations = homiesData['relations']!;
+                    final proposals = homiesData['proposals']!;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Relations:',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        ...relations.map((rel) => ListTile(
+                              title: Text('ID: ${rel['id']}'),
+                              subtitle: Text('Accepted: ${rel['isAccepted']}'),
+                            )),
+                        SizedBox(height: 20),
+                        Text('Proposals:',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        ...proposals.map((prop) => ListTile(
+                              title: Text('ID: ${prop['id']}'),
+                              subtitle: Text('Accepted: ${prop['isAccepted']}'),
+                            )),
+                      ],
+                    );
+                  },
+                ),
 
                 // Text(
                 //   AppStrings.T.seeIfYouveBeenHeardOrHaveReplies,
@@ -357,15 +405,16 @@ class Inbox extends GetItHook {
                               physics: NeverScrollableScrollPhysics(),
                               itemBuilder: (ctx, index) {
                                 final user = searchedUsers[index];
+                                final currUser = user['uid'] == threadsControllers.currentUser;
                                 return ListTile(
                                   title: Text(
-                                    user['name'],
+                                   '${user['name']} ${currUser ? '(you)' : ''}',
                                     style: TextStyle(
                                         fontSize: 23,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black),
                                   ),
-                                  subtitle: Text(user['email'],
+                                  subtitle: Text('${user['email']}',
                                       style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.bold,
@@ -381,7 +430,17 @@ class Inbox extends GetItHook {
                                       color: Colors.black,
                                     ),
                                   ),
-                                  trailing: IconButton(onPressed: (){}, icon: Icon(Icons.person_add,size: 30,)),
+                                  trailing: !currUser
+                                        ? IconButton(
+                                            onPressed: ()  {
+                                              createRelation(user);
+                                            },
+                                            icon: Icon(
+                                              Icons.person_add,
+                                              size: 30,
+                                            ),
+                                          )
+                                        : SizedBox.shrink()
                                 
                                 );
                               },
