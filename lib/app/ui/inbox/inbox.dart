@@ -24,8 +24,9 @@ class Inbox extends GetItHook {
   @override
   // TODO: implement canDisposeController
   bool get canDisposeController => false;
-  final RxString searchQuery = ''.obs;
   ThreadsControllers threadsControllers = ThreadsControllers();
+  final searchController = TextEditingController();
+  final RxString searchQuery = ''.obs;
   RxList<Map<String, dynamic>> searchedUsers = <Map<String, dynamic>>[].obs;
 
   List<String> names = [
@@ -52,7 +53,11 @@ class Inbox extends GetItHook {
 
   void handleSearch(String query) async {
     searchQuery.value = query;
-    searchNewUsers(query);
+    if (query.isNotEmpty) {
+      searchNewUsers(query);
+    } else {
+      searchedUsers.clear();
+    }
   }
 
   @override
@@ -106,6 +111,10 @@ class Inbox extends GetItHook {
                 TextField(
                   onChanged: (value) {
                     handleSearch(value);
+                  },
+                  onSubmitted: (value) {
+                    handleSearch(value);
+                    FocusScope.of(context).unfocus();
                   },
                   decoration: InputDecoration(
                     hintText: 'Find friends',
@@ -326,37 +335,59 @@ class Inbox extends GetItHook {
                 //   ],
                 // ),
                 // Gap(10),
-              
+
                 Gap(10),
 
                 Obx(() {
-                  return searchQuery.value.isEmpty ? SizedBox.shrink() : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Add new friends',
-                        style: appStyles.s26w700Black.copyWith(
-                          fontSize: 20,
-                          height: 1.3,
-                        ),
-                      ),
-                      ListView.builder(
-                        itemCount: searchedUsers.length,
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemBuilder: (ctx, index) {
-                          final user = searchedUsers[index];
-                          return replyTile(
-                            imagePath: user['avatar'] ?? assets[0], // Fallback
-                            name: user['name'] ?? 'Unknown',
-                            minute: 'now',
-                            appStyles: appStyles,
-                            appColors: appColors,
-                          );
-                        },
-                      ),
-                    ],
-                  );
+                  return searchedUsers.isEmpty
+                      ? SizedBox.shrink()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Add new friends',
+                              style: appStyles.s26w700Black.copyWith(
+                                fontSize: 20,
+                                height: 1.3,
+                              ),
+                            ),
+                            ListView.builder(
+                              itemCount: searchedUsers.length,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemBuilder: (ctx, index) {
+                                final user = searchedUsers[index];
+                                return ListTile(
+                                  title: Text(
+                                    user['name'],
+                                    style: TextStyle(
+                                        fontSize: 23,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black),
+                                  ),
+                                  subtitle: Text(user['email'],
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey)),
+                                  leading: Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: Colors.black, width: 3)),
+                                    child: Icon(
+                                      Icons.person_outlined,
+                                      size: 35,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  trailing: IconButton(onPressed: (){}, icon: Icon(Icons.person_add,size: 30,)),
+                                
+                                );
+                              },
+                            ),
+                          ],
+                        );
                 }),
               ],
             ),

@@ -28,7 +28,7 @@ class ThreadsControllers {
     final userRef = FirebaseFirestore.instance.collection('users').doc(currentUser);
 
     await userRef.update({
-      'relations':FieldValue.arrayUnion([{'name':otherUserName, 'id': otherUserId}])
+      'relations':FieldValue.arrayUnion([{'name':otherUserName, 'id': otherUserId , 'isAccepted': false}])
     });
    }
 
