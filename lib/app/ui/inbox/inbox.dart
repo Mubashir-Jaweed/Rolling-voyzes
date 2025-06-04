@@ -24,7 +24,7 @@ class Inbox extends GetItHook {
   @override
   // TODO: implement canDisposeController
   bool get canDisposeController => false;
-  final TextEditingController searchQuery = TextEditingController();
+  final RxString searchQuery = ''.obs;
   ThreadsControllers threadsControllers = ThreadsControllers();
   RxList<Map<String, dynamic>> searchedUsers = <Map<String, dynamic>>[].obs;
 
@@ -44,10 +44,15 @@ class Inbox extends GetItHook {
     Assets.png.eddie.path,
   ];
 
-  void searchNewUsers() async {
-    final results = await threadsControllers.getAllUsers(searchQuery.text);
+  void searchNewUsers(String query) async {
+    final results = await threadsControllers.getAllUsers(query);
     searchedUsers.assignAll(results);
-    print('Fetched ${searchedUsers.length} users');
+    print('..............Fetched ${searchedUsers.length} users');
+  }
+
+  void handleSearch(String query) async {
+    searchQuery.value = query;
+    searchNewUsers(query);
   }
 
   @override
@@ -99,9 +104,8 @@ class Inbox extends GetItHook {
                       .copyWith(fontSize: 45, height: 1.3),
                 ),
                 TextField(
-                  controller: searchQuery,
                   onChanged: (value) {
-                    searchNewUsers();
+                    handleSearch(value);
                   },
                   decoration: InputDecoration(
                     hintText: 'Find friends',
@@ -322,23 +326,12 @@ class Inbox extends GetItHook {
                 //   ],
                 // ),
                 // Gap(10),
-                ListView.builder(
-                  itemCount: 4,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemBuilder: (ctx, index) => replyTile(
-                    imagePath: assets[index],
-                    name: names[index],
-                    minute: index.toString(),
-                    appStyles: appStyles,
-                    appColors: appColors,
-                  ),
-                ),
+              
                 Gap(10),
 
                 Obx(() {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                  return searchQuery.value.isEmpty ? SizedBox.shrink() : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Add new friends',
