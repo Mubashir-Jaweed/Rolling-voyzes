@@ -39,7 +39,7 @@ class ThreadsControllers {
 }
 
 
-  Future<void> createRelation(String otherUserId )async {
+  Future<void> createRelation(String otherUserId, )async {
     final userRef = FirebaseFirestore.instance.collection('users').doc(currentUser);
     final requestedUser = FirebaseFirestore.instance.collection('users').doc(otherUserId);
 
@@ -52,22 +52,14 @@ class ThreadsControllers {
     });
    }
 
-  Future<Map<String,List<Map<String,dynamic>>>> getHomies()async{
+  Future<List<Map<String,dynamic>>> getHomies()async{
     final homies = await FirebaseFirestore.instance.collection('users').doc(currentUser).get();
     if (homies.exists) {
     final data = homies.data();
     final List<dynamic> relations = data?['relations'] ?? [];
-    final List<dynamic> proposals = data?['proposals'] ?? [];
-    return{
-      'relations' :List<Map<String, dynamic>>.from(relations),
-      'proposals' :List<Map<String, dynamic>>.from(proposals),
-       };
+    return List<Map<String, dynamic>>.from(relations);
   } else {
-    return {
-      'relations': [],
-      'proposals': [],
-    };
+    return [];
   }
   }
-  
 }

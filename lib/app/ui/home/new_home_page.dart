@@ -740,6 +740,7 @@ class HomePage extends GetItHook {
                   ),
                 ),
               ),
+             
               Expanded(
                 child: GestureDetector(
                   onTap: () {

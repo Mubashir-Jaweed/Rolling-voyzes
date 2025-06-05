@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
@@ -28,6 +30,8 @@ class Inbox extends GetItHook {
   final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
   RxList<Map<String, dynamic>> searchedUsers = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> proposals = <Map<String, dynamic>>[].obs;
+  RxBool isLoading = false.obs;
 
   List<String> names = [
     'Eddie',
@@ -55,14 +59,16 @@ class Inbox extends GetItHook {
     await threadsControllers.createRelation(user['uid']);
     searchedUsers
         .removeAt(searchedUsers.indexWhere((u) => u['uid'] == user['uid']));
-        //snack bar        
+    //snack bar
   }
 
-  Future<Map<String, dynamic>> getHomies() async {
-    return threadsControllers.getHomies();
+  Future<List<Map<String,dynamic>>> getHomies() async {
+    isLoading.value = true;
+    final homies = await threadsControllers.getHomies();
+    isLoading.value = false;
+    print('..................................${homies}');
+    return homies;
   }
-
-
 
   void handleSearch(String query) async {
     searchQuery.value = query;
@@ -73,6 +79,7 @@ class Inbox extends GetItHook {
     }
   }
 
+ 
   @override
   Widget build(BuildContext context) {
     final appColors = AppColors.of(context);
@@ -139,39 +146,31 @@ class Inbox extends GetItHook {
                   ),
                 ),
                 Gap(10),
-
-                FutureBuilder<Map<String, dynamic>>(
+                FutureBuilder(
                   future: getHomies(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return CircularProgressIndicator(); // Loading state
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}'); // Error state
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Text('No data'); // Empty state
+                    } else {
+                      // Data loaded successfully
+                      final relations = snapshot.data!;
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: relations.length,
+                        itemBuilder: (context, index) {
+                          final user = relations[index];
+                          return ListTile(
+                            title: Text('${user['id']}'),
+                          );
+                        },
+                      );
                     }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('No homies found'));
-                    }
-                    final homiesData = snapshot.data!;
-                    final relations = homiesData['relations']!;
-                    final proposals = homiesData['proposals']!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Relations:',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        ...relations.map((rel) => ListTile(
-                              title: Text('ID: ${rel['id']}'),
-                              subtitle: Text('Accepted: ${rel['isAccepted']}'),
-                            )),
-                        SizedBox(height: 20),
-                        Text('Proposals:',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        ...proposals.map((prop) => ListTile(
-                              title: Text('ID: ${prop['id']}'),
-                              subtitle: Text('Accepted: ${prop['isAccepted']}'),
-                            )),
-                      ],
-                    );
+
                   },
                 ),
 
@@ -405,34 +404,36 @@ class Inbox extends GetItHook {
                               physics: NeverScrollableScrollPhysics(),
                               itemBuilder: (ctx, index) {
                                 final user = searchedUsers[index];
-                                final currUser = user['uid'] == threadsControllers.currentUser;
+                                final currUser = user['uid'] ==
+                                    threadsControllers.currentUser;
                                 return ListTile(
-                                  title: Text(
-                                   '${user['name']} ${currUser ? '(you)' : ''}',
-                                    style: TextStyle(
-                                        fontSize: 23,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black),
-                                  ),
-                                  subtitle: Text('${user['email']}',
+                                    title: Text(
+                                      '${user['name']} ${currUser ? '(you)' : ''}',
                                       style: TextStyle(
-                                          fontSize: 13,
+                                          fontSize: 23,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.grey)),
-                                  leading: Container(
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                            color: Colors.black, width: 3)),
-                                    child: Icon(
-                                      Icons.person_outlined,
-                                      size: 35,
-                                      color: Colors.black,
+                                          color: Colors.black),
                                     ),
-                                  ),
-                                  trailing: !currUser
+                                    subtitle: Text('${user['email']}',
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey)),
+                                    leading: Container(
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                              color: Colors.black, width: 3)),
+                                      child: Icon(
+                                        Icons.person_outlined,
+                                        size: 35,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    trailing: !currUser
                                         ? IconButton(
-                                            onPressed: ()  {
+                                            onPressed: () {
                                               createRelation(user);
                                             },
                                             icon: Icon(
@@ -440,9 +441,7 @@ class Inbox extends GetItHook {
                                               size: 30,
                                             ),
                                           )
-                                        : SizedBox.shrink()
-                                
-                                );
+                                        : SizedBox.shrink());
                               },
                             ),
                           ],
