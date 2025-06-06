@@ -56,18 +56,29 @@ class Inbox extends GetItHook {
   }
 
   void createRelation(Map user) async {
-    await threadsControllers.createRelation(user['uid']);
+    await threadsControllers.createRelationRequest(
+      otherUserId: user['uid'],
+      otherUserEmail: user['email'],
+      otherUserName: user['name'],
+    );
     searchedUsers
         .removeAt(searchedUsers.indexWhere((u) => u['uid'] == user['uid']));
+        
     //snack bar
   }
 
-  Future<List<Map<String,dynamic>>> getHomies() async {
+  Stream<List<Map<String, dynamic>>> getHomies() async* {
     isLoading.value = true;
-    final homies = await threadsControllers.getHomies();
-    isLoading.value = false;
-    print('..................................${homies}');
-    return homies;
+    try {
+      final homies = await threadsControllers.getHomies();
+      yield homies;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  Stream<List<Map<String, dynamic>>> getProposals() async* {
+      final proposals = await threadsControllers.getProposals();
+      yield proposals;
   }
 
   void handleSearch(String query) async {
@@ -146,32 +157,145 @@ class Inbox extends GetItHook {
                   ),
                 ),
                 Gap(10),
-                FutureBuilder(
-                  future: getHomies(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator(); // Loading state
-                    } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}'); // Error state
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Text('No data'); // Empty state
-                    } else {
-                      // Data loaded successfully
-                      final relations = snapshot.data!;
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: relations.length,
-                        itemBuilder: (context, index) {
-                          final user = relations[index];
-                          return ListTile(
-                            title: Text('${user['id']}'),
-                          );
-                        },
-                      );
-                    }
-
-                  },
+                Center(
+                  // proposal
+                  child: StreamBuilder(
+                    stream: getProposals(),
+                    builder: (context, snapshot) {
+                       
+                        final proposals = snapshot.data!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: -20,
+                          children: [
+                             Text(
+                              'Friends request',
+                              style: appStyles.s26w700Black.copyWith(
+                                fontSize: 20,
+                                height: 1.3,
+                              ),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: proposals.length,
+                              itemBuilder: (context, index) {
+                                final user = proposals[index];
+                                return ListTile(
+                                  title: Text(
+                                    '${user['name']}',
+                                    style: TextStyle(
+                                        fontSize: 23,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black),
+                                  ),
+                                  subtitle: Text('${user['email']}',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey)),
+                                  leading: Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: Colors.black, width: 3)),
+                                    child: Icon(
+                                      Icons.person_outlined,
+                                      size: 35,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  
+                                  trailing: Row(
+                                    spacing: 5,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(50),
+                                        border: Border.all(
+                                            width: 1.5, color: Colors.black),
+                                      ),
+                                      child: Icon(Icons.check,size: 25,),
+                                    ),
+                                      Container(
+                                        padding: EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(50),
+                                        border: Border.all(
+                                            width: 1.5, color: Colors.black),
+                                      ),
+                                      child: Icon(Icons.close,size: 25,),
+                                    )
+                                    ],
+                                  ),
+                                              
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      
+                  
+                    },
+                  ),
+                ),
+                Gap(10),
+                Center(
+                  //homies
+                  child: StreamBuilder(
+                    stream: getHomies(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(); // Loading state
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}'); // Error state
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Text('No contact found'); // Empty state
+                      } else {
+                        // Data loaded successfully
+                        final relations = snapshot.data!;
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: relations.length,
+                          itemBuilder: (context, index) {
+                            final user = relations[index];
+                            return ListTile(
+                              title: Text(
+                                '${user['name']}',
+                                style: TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black),
+                              ),
+                              subtitle: Text('${user['email']}',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey)),
+                              leading: Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color: Colors.black, width: 3)),
+                                child: Icon(
+                                  Icons.person_outlined,
+                                  size: 35,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              
+                              trailing: Text('${!user['isAccepted'] ? ' request pending' : ''}'),
+                  
+                            );
+                          },
+                        );
+                      }
+                  
+                    },
+                  ),
                 ),
 
                 // Text(
