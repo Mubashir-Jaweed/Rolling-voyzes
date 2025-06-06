@@ -80,10 +80,129 @@ class ThreadsControllers {
     });
   }
 
-  Future<void> acceptProposal() async {
+  Future<void> acceptProposal({required String otherUserID}) async {
+  try {
+    final currentUserRef = FirebaseFirestore.instance.collection('users').doc(currentUser);
+    final otherUserRef = FirebaseFirestore.instance.collection('users').doc(otherUserID);
 
+    final currentUserRefSnapshot = await currentUserRef.get();
+    final otherUserRefSnapshot = await otherUserRef.get();
+
+    if (!currentUserRefSnapshot.exists || !otherUserRefSnapshot.exists) {
+      throw Exception("User documents not found");
+    }
+
+    final currentUserData = currentUserRefSnapshot.data() as Map<String, dynamic>;
+    final otherUserData = otherUserRefSnapshot.data() as Map<String, dynamic>;
+
+    // Explicitly cast the lists and handle null cases
+    final List<dynamic> proposalsDynamic = currentUserData['proposals'] ?? [];
+    final List<Map<String, dynamic>> proposals = proposalsDynamic
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    final List<dynamic> relationsDynamic = otherUserData['relations'] ?? [];
+    final List<Map<String, dynamic>> otherUserRelations = relationsDynamic
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    // Find the proposal and relation
+    final targetedProposal = proposals.firstWhere(
+      (proposal) => proposal['id'] == otherUserID,
+      orElse: () => throw Exception("Proposal not found"),
+    );
+
+    final targetedRelation = otherUserRelations.firstWhere(
+      (relation) => relation['id'] == currentUser,
+      orElse: () => throw Exception("Relation not found"),
+    );
+
+    // Prepare updated data
+    final updatedOtherUserRelation = {
+      'id': targetedRelation['id'],
+      'name': targetedRelation['name'],
+      'email': targetedRelation['email'],
+      'isAccepted': true,
+    };
+
+    final newRelation = {
+      'id': targetedProposal['id'],
+      'name': targetedProposal['name'],
+      'email': targetedProposal['email'],
+      'isAccepted': true,
+    };
+
+    // Batch write for atomic updates
+    final batch = FirebaseFirestore.instance.batch();
     
+    batch.update(currentUserRef, {
+      'relations': FieldValue.arrayUnion([newRelation]),
+      'proposals': FieldValue.arrayRemove([targetedProposal]),
+    });
+
+    batch.update(otherUserRef, {
+      'relations': FieldValue.arrayUnion([updatedOtherUserRelation]),
+    });
+    batch.update(otherUserRef, {
+      'relations': FieldValue.arrayRemove([targetedRelation]),
+    });
+
+    await batch.commit();
+  } catch (e) {
+    print('Error accepting proposal: $e');
+    rethrow;
   }
+}
+
+  // Future<void> acceptProposal({required String otherUserID}) async {
+  //   final currentUserRef =
+  //       FirebaseFirestore.instance.collection('users').doc(currentUser);
+  //   final otherUserRef =
+  //       FirebaseFirestore.instance.collection('users').doc(otherUserID);
+
+  //   final currentUserRefSnapshot = await currentUserRef.get();
+  //   final otherUserRefSnapshot = await otherUserRef.get();
+
+  //   final currentUserData = currentUserRefSnapshot.data();
+  //   final otherUserData = otherUserRefSnapshot.data();
+
+  //   final List<Map> proposals = currentUserData?['proposals'] ?? [];
+  //   Map<dynamic, dynamic> targetedProposal =
+  //       proposals.firstWhere((proposal) => proposal['id'] == otherUserID);
+  //   //  final targetedProposalIndex = proposals.indexWhere((proposal)=>proposal['id'] == otherUserID);
+
+  //   final List<Map> otherUserRelations = otherUserData?['relations'] ?? [];
+  //   Map<dynamic, dynamic> targetedRelation = otherUserRelations
+  //       .firstWhere((relation) => relation['id'] == currentUser);
+
+  //   final updatedOtherUserRelation = {
+  //     'id': targetedRelation['id'],
+  //     'name': targetedRelation['name'],
+  //     'email': targetedRelation['email'],
+  //     'isAccepted': true,
+  //   };
+
+  //   await currentUserRef.update({
+  //     'relations': FieldValue.arrayUnion([
+  //       {
+  //         'id': targetedProposal['id'],
+  //         'name': targetedProposal['name'],
+  //         'email': targetedProposal['email'],
+  //         'isAccepted': true,
+  //       }
+  //     ])
+  //   });
+  //   await currentUserRef.update({
+  //     'proposals': FieldValue.arrayRemove([targetedProposal])
+  //   });
+
+  //   await otherUserRef.update({
+  //     'relations': FieldValue.arrayRemove([targetedRelation])
+  //   });
+  //   await otherUserRef.update({
+  //     'relations': FieldValue.arrayUnion([updatedOtherUserRelation])
+  //   });
+  // }
 
   Future<List<Map<String, dynamic>>> getHomies() async {
     final homies = await FirebaseFirestore.instance

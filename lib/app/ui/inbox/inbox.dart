@@ -163,10 +163,11 @@ class Inbox extends GetItHook {
                     stream: getProposals(),
                     builder: (context, snapshot) {
                        
-                        final proposals = snapshot.data!;
+                          final proposals = snapshot.data!;
+                        if(snapshot.hasData && proposals.isNotEmpty){
+                          print('/...................................... ${proposals}');
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: -20,
                           children: [
                              Text(
                               'Friends request',
@@ -207,18 +208,23 @@ class Inbox extends GetItHook {
                                   ),
                                   
                                   trailing: Row(
-                                    spacing: 5,
                                     mainAxisSize: MainAxisSize.min,
+                                    spacing: 5,
                                     children: [
-                                      Container(
-                                        padding: EdgeInsets.all(5),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(50),
-                                        border: Border.all(
-                                            width: 1.5, color: Colors.black),
+                                      InkWell(
+                                        onTap: (){
+                                          threadsControllers.acceptProposal(otherUserID: user['id']);
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.all(5),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(50),
+                                          border: Border.all(
+                                              width: 1.5, color: Colors.black),
+                                        ),
+                                        child: Icon(Icons.check,size: 25,),
+                                                                            ),
                                       ),
-                                      child: Icon(Icons.check,size: 25,),
-                                    ),
                                       Container(
                                         padding: EdgeInsets.all(5),
                                       decoration: BoxDecoration(
@@ -236,6 +242,10 @@ class Inbox extends GetItHook {
                             ),
                           ],
                         );
+                        }
+                        else{
+                          return SizedBox.shrink();
+                        }
                       
                   
                     },
