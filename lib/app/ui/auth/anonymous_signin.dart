@@ -38,13 +38,13 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if(email.isEmpty || password.isEmpty){
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
-      result = 'Email & password required';
+        result = 'Email & password required';
       });
       return;
     }
-  
+
     if (!isLogin) {
       result = await AuthService.instance.signUp(email, password);
     } else {
@@ -52,10 +52,12 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
     }
 
     if (result == null) {
-      print('loged in successfullt...........................................................................................');
-     Get.offAllNamed(AppRoutes.home);
-    }else{
-      print('result ..........................................................$result');
+      print(
+          'loged in successfullt...........................................................................................');
+      Get.offAllNamed(AppRoutes.home);
+    } else {
+      print(
+          'result ..........................................................$result');
       setState(() => error = result);
     }
   }
@@ -65,57 +67,91 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
     final appColors = AppColors.of(context);
     final appStyles = AppStyles.of(context);
     return Scaffold(
-      backgroundColor: appColors.white,
+      backgroundColor: Color(0xff00113c),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(30.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              isLogin ? 'Login' : "Signup",
+              textAlign: TextAlign.center,
+              isLogin ? 'Login' : "Create \n Account",
               style: TextStyle(
-                  fontSize: 32,
-                  color: appColors.black,
-                  fontWeight: FontWeight.bold),
+                fontSize: 42,
+                height: 1,
+                color: appColors.white,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             SizedBox(
               height: 20,
             ),
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: "Enter your email",),
+              decoration: InputDecoration(
+                  hintText: "Enter your Email",
+                  hintStyle: TextStyle(color: Colors.white),
+                  filled: true,
+                  fillColor: Color(0xff011341),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide(
+                        color: Color(0xff0b1a48),
+                      )),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide(color: Color(0xff0b1a48), width: 2),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 15)),
             ),
             SizedBox(height: 20),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: "Enter your Password"),
+              decoration: InputDecoration(
+                  hintText: "Enter your Password",
+                  hintStyle: TextStyle(color: Colors.white),
+                  filled: true,
+                  fillColor: Color(0xff011341),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide(
+                        color: Color(0xff0b1a48),
+                      )),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide(color: Color(0xff0b1a48), width: 2),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 15)),
             ),
             SizedBox(
-              height:20,
+              height: 20,
             ),
-             Text(
-                  '$result',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.redAccent, fontSize: 16,),
-                ),
+            Text(
+              '$result',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 16,
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  '${isLogin ? 'Dont' : 'Already'} have an account ',
-                  style: TextStyle(color: appColors.textColor, fontSize: 16),
+                  '${isLogin ? "Don't" : 'Already'} have an account? ',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
                 InkWell(
                     onTap: () {
                       toggleForm();
                     },
                     child: Text(
-                      '${isLogin ? "SignUp" : 'Login'}',
+                      '${isLogin ? "Create one" : 'Login'}',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: appColors.textColor,
+                          color: Color(0xff32a9c2),
                           fontSize: 16),
                     )),
               ],
@@ -127,14 +163,17 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
               },
               child: Container(
                 alignment: Alignment.center,
-                height: 40,
-                width: 150,
+                height: 50,
+                width: double.infinity,
                 decoration: BoxDecoration(
-                    color: appColors.borderColor,
+                    color: Color(0xff0061cc),
                     borderRadius: BorderRadius.circular(50)),
                 child: Text(
-                  isLogin ? "Login" : 'Signup',
-                  style: TextStyle(fontSize: 20),
+                  isLogin ? "Login" : 'Sign up',
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
               ),
             )

@@ -157,100 +157,100 @@ class Inbox extends GetItHook {
                   ),
                 ),
                 Gap(10),
-                Center(
-                  // proposal
-                  child: StreamBuilder(
-                    stream: getProposals(),
-                    builder: (context, snapshot) {
+                // Center(
+                //   // proposal
+                //   child: StreamBuilder(
+                //     stream: getProposals(),
+                //     builder: (context, snapshot) {
                        
-                          final proposals = snapshot.data!;
-                        if(snapshot.hasData && proposals.isNotEmpty){
-                          print('/...................................... ${proposals}');
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                             Text(
-                              'Friends request',
-                              style: appStyles.s26w700Black.copyWith(
-                                fontSize: 20,
-                                height: 1.3,
-                              ),
-                            ),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: proposals.length,
-                              itemBuilder: (context, index) {
-                                final user = proposals[index];
-                                return ListTile(
-                                  title: Text(
-                                    '${user['name']}',
-                                    style: TextStyle(
-                                        fontSize: 23,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black),
-                                  ),
-                                  subtitle: Text('${user['email']}',
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.grey)),
-                                  leading: Container(
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                            color: Colors.black, width: 3)),
-                                    child: Icon(
-                                      Icons.person_outlined,
-                                      size: 35,
-                                      color: Colors.black,
-                                    ),
-                                  ),
+                //           final proposals = snapshot.data!;
+                //         if(snapshot.hasData && proposals.isNotEmpty){
+                //           print('/...................................... ${proposals}');
+                //         return Column(
+                //           crossAxisAlignment: CrossAxisAlignment.start,
+                //           children: [
+                //              Text(
+                //               'Friends request',
+                //               style: appStyles.s26w700Black.copyWith(
+                //                 fontSize: 20,
+                //                 height: 1.3,
+                //               ),
+                //             ),
+                //             ListView.builder(
+                //               shrinkWrap: true,
+                //               physics: NeverScrollableScrollPhysics(),
+                //               itemCount: proposals.length,
+                //               itemBuilder: (context, index) {
+                //                 final user = proposals[index];
+                //                 return ListTile(
+                //                   title: Text(
+                //                     '${user['name']}',
+                //                     style: TextStyle(
+                //                         fontSize: 23,
+                //                         fontWeight: FontWeight.bold,
+                //                         color: Colors.black),
+                //                   ),
+                //                   subtitle: Text('${user['email']}',
+                //                       style: TextStyle(
+                //                           fontSize: 13,
+                //                           fontWeight: FontWeight.bold,
+                //                           color: Colors.grey)),
+                //                   leading: Container(
+                //                     decoration: BoxDecoration(
+                //                         borderRadius: BorderRadius.circular(10),
+                //                         border: Border.all(
+                //                             color: Colors.black, width: 3)),
+                //                     child: Icon(
+                //                       Icons.person_outlined,
+                //                       size: 35,
+                //                       color: Colors.black,
+                //                     ),
+                //                   ),
                                   
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    spacing: 5,
-                                    children: [
-                                      InkWell(
-                                        onTap: (){
-                                          threadsControllers.acceptProposal(otherUserID: user['id']);
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.all(5),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(50),
-                                          border: Border.all(
-                                              width: 1.5, color: Colors.black),
-                                        ),
-                                        child: Icon(Icons.check,size: 25,),
-                                                                            ),
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets.all(5),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(50),
-                                        border: Border.all(
-                                            width: 1.5, color: Colors.black),
-                                      ),
-                                      child: Icon(Icons.close,size: 25,),
-                                    )
-                                    ],
-                                  ),
+                //                   trailing: Row(
+                //                     mainAxisSize: MainAxisSize.min,
+                //                     spacing: 5,
+                //                     children: [
+                //                       InkWell(
+                //                         onTap: (){
+                //                           threadsControllers.acceptProposal(otherUserID: user['id']);
+                //                         },
+                //                         child: Container(
+                //                           padding: EdgeInsets.all(5),
+                //                         decoration: BoxDecoration(
+                //                           borderRadius: BorderRadius.circular(50),
+                //                           border: Border.all(
+                //                               width: 1.5, color: Colors.black),
+                //                         ),
+                //                         child: Icon(Icons.check,size: 25,),
+                //                                                             ),
+                //                       ),
+                //                       Container(
+                //                         padding: EdgeInsets.all(5),
+                //                       decoration: BoxDecoration(
+                //                         borderRadius: BorderRadius.circular(50),
+                //                         border: Border.all(
+                //                             width: 1.5, color: Colors.black),
+                //                       ),
+                //                       child: Icon(Icons.close,size: 25,),
+                //                     )
+                //                     ],
+                //                   ),
                                               
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                        }
-                        else{
-                          return SizedBox.shrink();
-                        }
+                //                 );
+                //               },
+                //             ),
+                //           ],
+                //         );
+                //         }
+                //         else{
+                //           return SizedBox.shrink();
+                //         }
                       
                   
-                    },
-                  ),
-                ),
+                //     },
+                //   ),
+                // ),
                 Gap(10),
                 Center(
                   //homies
