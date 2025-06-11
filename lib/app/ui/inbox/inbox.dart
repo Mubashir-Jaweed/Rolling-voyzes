@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:voyzi/app/controller/threads_controller.dart';
+import 'package:voyzi/app/ui/inbox/add_friend.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
 import 'package:voyzi/app/utils/constants/app_border_radius.dart';
 import 'package:voyzi/app/utils/constants/app_constants.dart';
@@ -96,33 +97,35 @@ class Inbox extends GetItHook {
     final appColors = AppColors.of(context);
     final appStyles = AppStyles.of(context);
     return Container(
-      decoration : BoxDecoration(
-        // gradient: LinearGradient(begin: Alignment.bottomCenter, colors: [ Color(0xff0d4e78),Color(0xff011e38),])
-        color: Color(0xff011e38)
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 80,
-            width: double.infinity,
-            child: Center(child: Text('All Chats',style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w500
-            ),)),
-          ),
-          Expanded(
+        decoration: BoxDecoration(color: Color(0xff011a3a)),
+        child: Column(
+          children: [
+            Container(
+              height: 80,
+              width: double.infinity,
+              child: Center(
+                  child: Text(
+                'All Chats',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500),
+              )),
+            ),
+            Expanded(
               child: StreamBuilder(
                 stream: getHomies(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator()); 
+                    return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    return Center(child: Text('Try again after some time')); // Error state
+                    return Center(
+                        child:
+                            Text('Try again after some time')); // Error state
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children:[ NoContactFound()]);
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [NoContactFound()]);
                   } else {
                     final relations = snapshot.data!;
                     return ListView.builder(
@@ -164,9 +167,8 @@ class Inbox extends GetItHook {
                 },
               ),
             )
-        ],
-      )
-    );
+          ],
+        ));
   }
 
   Widget WaveShapes({required AppColors appColors}) {
@@ -212,9 +214,6 @@ class Inbox extends GetItHook {
   }
 }
 
-
-
-
 class NoContactFound extends StatelessWidget {
   const NoContactFound({super.key});
 
@@ -227,9 +226,7 @@ class NoContactFound extends StatelessWidget {
             "Don't see many chats yet?",
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold),
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           Gap(6),
           Text(
@@ -240,35 +237,51 @@ class NoContactFound extends StatelessWidget {
               fontSize: 17,
             ),
           ),
-          Container(
-
-            width: 300,
-            margin: EdgeInsets.symmetric(vertical: 30),
-            padding: EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-                border: Border.all(color: Color(0xff0d4376), ),
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient( begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [ Color(0xff02203a),Color(0xff062f54),]),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xff0c4373).withOpacity(0.5),
-                    blurRadius: 20,
-                    offset: Offset(0, 0),
+          InkWell(
+            onTap: () {
+              Get.to(()=>AddFriend());
+            },
+            child: Container(
+              width: 300,
+              margin: EdgeInsets.symmetric(vertical: 30),
+              padding: EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Color(0xff0d4376),
                   ),
-                ]),
-                
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 5,
-              children: [
-                Icon(Icons.add,
-                size: 30,),
-                Text(
-                  'ADD FRIEND',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white70),
-                )
-              ],
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xff02203a),
+                        Color(0xff062f54),
+                      ]),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xff0c4373).withOpacity(0.5),
+                      blurRadius: 20,
+                      offset: Offset(0, 0),
+                    ),
+                  ]),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 5,
+                children: [
+                  Icon(
+                    Icons.add,
+                    size: 28,
+                  ),
+                  Text(
+                    'ADD FRIEND',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70),
+                  )
+                ],
+              ),
             ),
           )
         ],

@@ -195,7 +195,7 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
                       '${isLogin ? "Create one" : 'Login'}',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xff32a9c2),
+                          color: Color(0xff2e90d0),
                           fontSize: 16),
                     )),
               ],
