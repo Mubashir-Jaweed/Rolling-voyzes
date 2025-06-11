@@ -125,6 +125,7 @@ flutter:
 
   assets:
     - assets/png/
+    - assets/png/avatars/
     - assets/audio/
     - assets/animation/
 

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:voyzi/app/controller/threads_controller.dart';
+import 'package:voyzi/app/my_utils/avatar.dart';
 import 'package:voyzi/app/ui/inbox/add_friend.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
 import 'package:voyzi/app/utils/constants/app_border_radius.dart';
@@ -123,9 +124,7 @@ class Inbox extends GetItHook {
                         child:
                             Text('Try again after some time')); // Error state
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [NoContactFound()]);
+                    return NoContactFound();
                   } else {
                     final relations = snapshot.data!;
                     return ListView.builder(
@@ -222,6 +221,89 @@ class NoContactFound extends StatelessWidget {
     return Container(
       child: Column(
         children: [
+          Container(
+            height: 280,
+            width: 280,
+            margin: EdgeInsets.symmetric(vertical: 30),
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+                border: Border.all(
+                  color: Color(0xff0d4376),
+                ),
+                borderRadius: BorderRadius.circular(30),
+                color: Color(0xff01102f),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xff0c4373).withOpacity(0.5),
+                    blurRadius: 20,
+                    offset: Offset(0, 0),
+                  ),
+                ]),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.yellow.withOpacity(0.1),
+                        blurRadius: 40,
+                        offset: Offset(0, 0),
+                        blurStyle: BlurStyle.normal
+                      )
+                    ]
+                  ),
+                  child: Image.asset(Avatar.admin, height: 170, )),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'paid2obtain',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Gap(4),
+                        Text(
+                          'listened . 1h ago',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 14,
+                          ),
+                        )
+                      ],
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Color(0xFF187DDB),
+                          ),
+                          borderRadius: BorderRadius.circular(30),
+                          color: Color(0xff011a3a),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF187DDB).withOpacity(0.7),
+                              blurRadius: 8,
+                              offset: Offset(0, 0),
+                            ),
+                          ]),
+                      child: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 28,
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
+          ),
           Text(
             "Don't see many chats yet?",
             textAlign: TextAlign.center,
@@ -239,7 +321,7 @@ class NoContactFound extends StatelessWidget {
           ),
           InkWell(
             onTap: () {
-              Get.to(()=>AddFriend());
+              Get.to(() => AddFriend());
             },
             child: Container(
               width: 300,
@@ -249,7 +331,7 @@ class NoContactFound extends StatelessWidget {
                   border: Border.all(
                     color: Color(0xff0d4376),
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(15),
                   gradient: LinearGradient(
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
