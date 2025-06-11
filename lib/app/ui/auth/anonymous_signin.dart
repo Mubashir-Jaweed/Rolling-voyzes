@@ -3,9 +3,12 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:voyzi/app/my_utils/images.dart';
 import 'package:voyzi/app/routes/app_routes.dart';
 import 'package:voyzi/app/services/auth_services.dart';
+import 'package:voyzi/app/ui/widgets/custom_image_view.dart';
 import 'package:voyzi/app/utils/themes/app_theme.dart';
+import 'package:voyzi/gen/assets.gen.dart';
 
 class AnonymousSignin extends StatefulWidget {
   const AnonymousSignin({super.key});
@@ -67,13 +70,31 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
     final appColors = AppColors.of(context);
     final appStyles = AppStyles.of(context);
     return Scaffold(
-      backgroundColor: Color(0xff00113c),
-      body: Padding(
+      // backgroundColor: Color(0xff00113c),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: isLogin ?  BoxDecoration(
+          image: DecorationImage(image: AssetImage(Images.login_bg),fit: BoxFit.fitHeight)
+        ) :BoxDecoration(
+          color: Color(0xff00113c)
+        ),
         padding: const EdgeInsets.all(30.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+           
+
+             isLogin ?  Image.asset(
+                Images.login_icon,
+                width: 280,
+              )  :Image.asset(
+                Images.signup_icon,
+                width: 280,
+              ),
+              
+            
             Text(
               textAlign: TextAlign.center,
               isLogin ? 'Login' : "Create \n Account",
@@ -103,7 +124,8 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
                     borderRadius: BorderRadius.circular(15),
                     borderSide: BorderSide(color: Color(0xff0b1a48), width: 2),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 15)),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 15, vertical: 15)),
             ),
             SizedBox(height: 20),
             TextField(
@@ -122,11 +144,11 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
                     borderRadius: BorderRadius.circular(15),
                     borderSide: BorderSide(color: Color(0xff0b1a48), width: 2),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 15)),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 15, vertical: 15)),
             ),
-            SizedBox(
-              height: 20,
-            ),
+            SizedBox(height: 10,),
+            
             Text(
               '$result',
               textAlign: TextAlign.center,
@@ -135,6 +157,28 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
                 fontSize: 16,
               ),
             ),
+            SizedBox(height: 10,),
+            InkWell(
+              onTap: () {
+                handleAuth();
+              },
+              child: Container(
+                alignment: Alignment.center,
+                height: 50,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                    color: Color(0xff0061cc),
+                    borderRadius: BorderRadius.circular(50)),
+                child: Text(
+                  isLogin ? "Login" : 'Sign up',
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -156,27 +200,6 @@ class _AnonymousSigninState extends State<AnonymousSignin> {
                     )),
               ],
             ),
-            SizedBox(height: 20),
-            InkWell(
-              onTap: () {
-                handleAuth();
-              },
-              child: Container(
-                alignment: Alignment.center,
-                height: 50,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                    color: Color(0xff0061cc),
-                    borderRadius: BorderRadius.circular(50)),
-                child: Text(
-                  isLogin ? "Login" : 'Sign up',
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            )
           ],
         ),
       ),
