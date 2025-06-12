@@ -32,11 +32,6 @@ class Inbox extends GetItHook {
   ThreadsControllers threadsControllers = ThreadsControllers();
   RxBool isLoading = false.obs;
 
-
- 
-
-  
-
   Stream<List<Map<String, dynamic>>> getHomies() async* {
     isLoading.value = true;
     try {
@@ -47,15 +42,10 @@ class Inbox extends GetItHook {
     }
   }
 
-  
- 
-
   @override
   void onInit() {
-     
     super.onInit();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -187,8 +177,8 @@ class NoContactFound extends StatefulWidget {
 class _NoContactFoundState extends State<NoContactFound> {
   ThreadsControllers threadsControllers = ThreadsControllers();
 
-  Stream<List<Map<String, dynamic>>> getProposals() async* {
-    final proposalsCount = await threadsControllers.getProposals();
+  Stream<int> getProposalsCount() async* {
+    final proposalsCount = await threadsControllers.getProposalsLength();
     yield proposalsCount;
   }
 
@@ -349,12 +339,12 @@ class _NoContactFoundState extends State<NoContactFound> {
               ),
               InkWell(
                 onTap: () {
-                  Get.to(()=>FriendRequests());
+                  Get.to(() => FriendRequests());
                 },
                 child: Container(
                   width: 45,
+                  height: 45,
                   margin: EdgeInsets.symmetric(vertical: 30),
-                  padding: EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                       border: Border.all(
                         color: Color(0xff0d4376),
@@ -374,21 +364,39 @@ class _NoContactFoundState extends State<NoContactFound> {
                           offset: Offset(0, 0),
                         ),
                       ]),
-                  child: Row(
+                  child: Stack(
                     children: [
-                      Icon(
+                       Icon(
                         Icons.person_2_rounded,
                         size: 28,
                         color: Colors.white70,
                       ),
-                      StreamBuilder(stream: getProposals(), builder: 
-                      (context, snapshot) {
-                        if(snapshot.hasData){
-                        return Text('${snapshot.data!}');
-                        }
-                        return Text('0');
-                      },)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                          child: StreamBuilder(
+                        stream: getProposalsCount(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return Container(
+                              height: 10,
+                              width: 10,
+                              decoration: 
+                              BoxDecoration(
+                                color: Colors.lightBlueAccent,
+                                borderRadius: BorderRadius.circular(100)
+                              ),
+                              child: Text('.'),
+                            );
+                          } else if (snapshot.data == 0) {
+                            return Text('');
+                          } else {
+                            return Text('');
+                          }
+                        },
+                      ))
                     ],
+                    alignment: Alignment.center,
                   ),
                 ),
               ),
@@ -399,6 +407,8 @@ class _NoContactFoundState extends State<NoContactFound> {
     );
   }
 }
+
+ 
 
 
 // Padding(
