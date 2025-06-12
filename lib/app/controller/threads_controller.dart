@@ -22,8 +22,8 @@ class ThreadsControllers {
       // Query users by name
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
-          .where('name', isGreaterThanOrEqualTo: query)
-          .where('name', isLessThan: query + 'z')
+          .where('uniqueId', isGreaterThanOrEqualTo: query)
+          .where('uniqueId', isLessThan: query + 'z')
           .get();
 
       // Filter out users who are already in relations OR current user himself
@@ -42,26 +42,40 @@ class ThreadsControllers {
     }
   }
 
-  Future<void> createRelationRequest(
-      {required String otherUserId,
-      required String otherUserName,
-      required String otherUserEmail}) async {
+  Future<void> createRelationRequest({
+    required String otherUserUniqueName,
+  }) async {
+    if(otherUserUniqueName.isEmpty){
+      print('Invalid user id');
+      return;
+    }
+
+    final dedicatedUser = await FirebaseFirestore.instance.collection('users').where('uniqueId', isEqualTo: otherUserUniqueName).limit(1).get();
+    if(dedicatedUser.docs.isEmpty){
+      print('User not found!');
+      return;
+    }
+    final dedicatedUserDocs = dedicatedUser.docs.first;
+
+
     final userRef =
         FirebaseFirestore.instance.collection('users').doc(currentUser);
     final requestedUserRef =
-        FirebaseFirestore.instance.collection('users').doc(otherUserId);
+        FirebaseFirestore.instance.collection('users').doc(dedicatedUserDocs.id);
 
     // First fetch the requested user's data
     final requestedUserDoc = await requestedUserRef.get();
+    if (!requestedUserDoc.exists) {
+      print('user not found!');
+      return;
+    }
     final requestedUserData =
-        requestedUserDoc.data()!; // Assuming the document exists
+        requestedUserDoc.data()!; 
 
     await userRef.update({
       'relations': FieldValue.arrayUnion([
         {
-          'id': otherUserId,
-          'name': otherUserName,
-          'email': otherUserEmail,
+          'id': requestedUserData['uid'],
           'isAccepted': false
         }
       ])
@@ -70,89 +84,87 @@ class ThreadsControllers {
       'proposals': FieldValue.arrayUnion([
         {
           'id': currentUser,
-          'name': requestedUserData[
-              'name'], // Access the name from the fetched data
-          'email': requestedUserData[
-              'email'], // Access the email from the fetched data
           'isAccepted': false
         }
       ])
     });
+    print('request sent');
   }
 
   Future<void> acceptProposal({required String otherUserID}) async {
-  try {
-    final currentUserRef = FirebaseFirestore.instance.collection('users').doc(currentUser);
-    final otherUserRef = FirebaseFirestore.instance.collection('users').doc(otherUserID);
+    try {
+      final currentUserRef =
+          FirebaseFirestore.instance.collection('users').doc(currentUser);
+      final otherUserRef =
+          FirebaseFirestore.instance.collection('users').doc(otherUserID);
 
-    final currentUserRefSnapshot = await currentUserRef.get();
-    final otherUserRefSnapshot = await otherUserRef.get();
+      final currentUserRefSnapshot = await currentUserRef.get();
+      final otherUserRefSnapshot = await otherUserRef.get();
 
-    if (!currentUserRefSnapshot.exists || !otherUserRefSnapshot.exists) {
-      throw Exception("User documents not found");
+      if (!currentUserRefSnapshot.exists || !otherUserRefSnapshot.exists) {
+        throw Exception("User documents not found");
+      }
+
+      final currentUserData =
+          currentUserRefSnapshot.data() as Map<String, dynamic>;
+      final otherUserData = otherUserRefSnapshot.data() as Map<String, dynamic>;
+
+      // Explicitly cast the lists and handle null cases
+      final List<dynamic> proposalsDynamic = currentUserData['proposals'] ?? [];
+      final List<Map<String, dynamic>> proposals =
+          proposalsDynamic.whereType<Map<String, dynamic>>().toList();
+
+      final List<dynamic> relationsDynamic = otherUserData['relations'] ?? [];
+      final List<Map<String, dynamic>> otherUserRelations =
+          relationsDynamic.whereType<Map<String, dynamic>>().toList();
+
+      // Find the proposal and relation
+      final targetedProposal = proposals.firstWhere(
+        (proposal) => proposal['id'] == otherUserID,
+        orElse: () => throw Exception("Proposal not found"),
+      );
+
+      final targetedRelation = otherUserRelations.firstWhere(
+        (relation) => relation['id'] == currentUser,
+        orElse: () => throw Exception("Relation not found"),
+      );
+
+      // Prepare updated data
+      final updatedOtherUserRelation = {
+        'id': targetedRelation['id'],
+        'name': targetedRelation['name'],
+        'email': targetedRelation['email'],
+        'isAccepted': true,
+      };
+
+      final newRelation = {
+        'id': targetedProposal['id'],
+        'name': targetedProposal['name'],
+        'email': targetedProposal['email'],
+        'isAccepted': true,
+      };
+
+      // Batch write for atomic updates
+      final batch = FirebaseFirestore.instance.batch();
+
+      batch.update(currentUserRef, {
+        'relations': FieldValue.arrayUnion([newRelation]),
+        'proposals': FieldValue.arrayRemove([targetedProposal]),
+      });
+
+      batch.update(otherUserRef, {
+        'relations': FieldValue.arrayUnion([updatedOtherUserRelation]),
+      });
+      batch.update(otherUserRef, {
+        'relations': FieldValue.arrayRemove([targetedRelation]),
+      });
+
+      await batch.commit();
+    } catch (e) {
+      print('Error accepting proposal: $e');
+      rethrow;
     }
-
-    final currentUserData = currentUserRefSnapshot.data() as Map<String, dynamic>;
-    final otherUserData = otherUserRefSnapshot.data() as Map<String, dynamic>;
-
-    // Explicitly cast the lists and handle null cases
-    final List<dynamic> proposalsDynamic = currentUserData['proposals'] ?? [];
-    final List<Map<String, dynamic>> proposals = proposalsDynamic
-        .whereType<Map<String, dynamic>>()
-        .toList();
-
-    final List<dynamic> relationsDynamic = otherUserData['relations'] ?? [];
-    final List<Map<String, dynamic>> otherUserRelations = relationsDynamic
-        .whereType<Map<String, dynamic>>()
-        .toList();
-
-    // Find the proposal and relation
-    final targetedProposal = proposals.firstWhere(
-      (proposal) => proposal['id'] == otherUserID,
-      orElse: () => throw Exception("Proposal not found"),
-    );
-
-    final targetedRelation = otherUserRelations.firstWhere(
-      (relation) => relation['id'] == currentUser,
-      orElse: () => throw Exception("Relation not found"),
-    );
-
-    // Prepare updated data
-    final updatedOtherUserRelation = {
-      'id': targetedRelation['id'],
-      'name': targetedRelation['name'],
-      'email': targetedRelation['email'],
-      'isAccepted': true,
-    };
-
-    final newRelation = {
-      'id': targetedProposal['id'],
-      'name': targetedProposal['name'],
-      'email': targetedProposal['email'],
-      'isAccepted': true,
-    };
-
-    // Batch write for atomic updates
-    final batch = FirebaseFirestore.instance.batch();
-    
-    batch.update(currentUserRef, {
-      'relations': FieldValue.arrayUnion([newRelation]),
-      'proposals': FieldValue.arrayRemove([targetedProposal]),
-    });
-
-    batch.update(otherUserRef, {
-      'relations': FieldValue.arrayUnion([updatedOtherUserRelation]),
-    });
-    batch.update(otherUserRef, {
-      'relations': FieldValue.arrayRemove([targetedRelation]),
-    });
-
-    await batch.commit();
-  } catch (e) {
-    print('Error accepting proposal: $e');
-    rethrow;
   }
-}
 
   // Future<void> acceptProposal({required String otherUserID}) async {
   //   final currentUserRef =
@@ -229,6 +241,19 @@ class ThreadsControllers {
       return List<Map<String, dynamic>>.from(relations);
     } else {
       return [];
+    }
+  }
+  Future<int> getProposalsLength() async {
+    final homies = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser)
+        .get();
+    if (homies.exists) {
+      final data = homies.data();
+      final List<dynamic> relations = data?['proposals'] ?? [];
+      return  relations.length;
+    } else {
+      return 0;
     }
   }
 }

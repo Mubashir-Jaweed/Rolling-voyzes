@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:voyzi/app/controller/threads_controller.dart';
 import 'package:voyzi/app/my_utils/avatar.dart';
 import 'package:voyzi/app/ui/inbox/add_friend.dart';
+import 'package:voyzi/app/ui/inbox/firends_request.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
 import 'package:voyzi/app/utils/constants/app_border_radius.dart';
 import 'package:voyzi/app/utils/constants/app_constants.dart';
@@ -29,45 +30,12 @@ class Inbox extends GetItHook {
   // TODO: implement canDisposeController
   bool get canDisposeController => false;
   ThreadsControllers threadsControllers = ThreadsControllers();
-  final searchController = TextEditingController();
-  final RxString searchQuery = ''.obs;
-  RxList<Map<String, dynamic>> searchedUsers = <Map<String, dynamic>>[].obs;
-  RxList<Map<String, dynamic>> proposals = <Map<String, dynamic>>[].obs;
   RxBool isLoading = false.obs;
 
-  List<String> names = [
-    'Eddie',
-    'Talayah',
-    'Xtendo',
-    'Trey',
-    'Eddie',
-  ];
 
-  List<String> assets = [
-    Assets.png.eddie.path,
-    Assets.png.talayah.path,
-    Assets.png.xtendo.path,
-    Assets.png.trey.path,
-    Assets.png.eddie.path,
-  ];
+ 
 
-  void searchNewUsers(String query) async {
-    final results = await threadsControllers.getAllUsers(query);
-    searchedUsers.assignAll(results);
-    print('..............Fetched ${searchedUsers.length} users');
-  }
-
-  void createRelation(Map user) async {
-    await threadsControllers.createRelationRequest(
-      otherUserId: user['uid'],
-      otherUserEmail: user['email'],
-      otherUserName: user['name'],
-    );
-    searchedUsers
-        .removeAt(searchedUsers.indexWhere((u) => u['uid'] == user['uid']));
-
-    //snack bar
-  }
+  
 
   Stream<List<Map<String, dynamic>>> getHomies() async* {
     isLoading.value = true;
@@ -79,19 +47,15 @@ class Inbox extends GetItHook {
     }
   }
 
-  Stream<List<Map<String, dynamic>>> getProposals() async* {
-    final proposals = await threadsControllers.getProposals();
-    yield proposals;
+  
+ 
+
+  @override
+  void onInit() {
+     
+    super.onInit();
   }
 
-  void handleSearch(String query) async {
-    searchQuery.value = query;
-    if (query.isNotEmpty) {
-      searchNewUsers(query);
-    } else {
-      searchedUsers.clear();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,8 +177,20 @@ class Inbox extends GetItHook {
   }
 }
 
-class NoContactFound extends StatelessWidget {
+class NoContactFound extends StatefulWidget {
   const NoContactFound({super.key});
+
+  @override
+  State<NoContactFound> createState() => _NoContactFoundState();
+}
+
+class _NoContactFoundState extends State<NoContactFound> {
+  ThreadsControllers threadsControllers = ThreadsControllers();
+
+  Stream<List<Map<String, dynamic>>> getProposals() async* {
+    final proposalsCount = await threadsControllers.getProposals();
+    yield proposalsCount;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,18 +219,19 @@ class NoContactFound extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.yellow.withOpacity(0.1),
-                        blurRadius: 40,
-                        offset: Offset(0, 0),
-                        blurStyle: BlurStyle.normal
-                      )
-                    ]
-                  ),
-                  child: Image.asset(Avatar.admin, height: 170, )),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.yellowAccent.withOpacity(0.1),
+                              blurRadius: 40,
+                              offset: Offset(0, 0),
+                              blurStyle: BlurStyle.normal)
+                        ]),
+                    child: Image.asset(
+                      Avatar.admin,
+                      height: 170,
+                    )),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -319,52 +296,103 @@ class NoContactFound extends StatelessWidget {
               fontSize: 17,
             ),
           ),
-          InkWell(
-            onTap: () {
-              Get.to(() => AddFriend());
-            },
-            child: Container(
-              width: 300,
-              margin: EdgeInsets.symmetric(vertical: 30),
-              padding: EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Color(0xff0d4376),
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                  gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Color(0xff02203a),
-                        Color(0xff062f54),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 5,
+            children: [
+              InkWell(
+                onTap: () {
+                  Get.to(()=>AddFriend());
+                },
+                child: Container(
+                  width: 260,
+                  margin: EdgeInsets.symmetric(vertical: 30),
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Color(0xff0d4376),
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xff02203a),
+                            Color(0xff062f54),
+                          ]),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xff0c4373).withOpacity(0.5),
+                          blurRadius: 20,
+                          offset: Offset(0, 0),
+                        ),
                       ]),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xff0c4373).withOpacity(0.5),
-                      blurRadius: 20,
-                      offset: Offset(0, 0),
-                    ),
-                  ]),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 5,
-                children: [
-                  Icon(
-                    Icons.add,
-                    size: 28,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 5,
+                    children: [
+                      Icon(
+                        Icons.add,
+                        size: 28,
+                      ),
+                      Text(
+                        'ADD FRIEND',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70),
+                      )
+                    ],
                   ),
-                  Text(
-                    'ADD FRIEND',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70),
-                  )
-                ],
+                ),
               ),
-            ),
+              InkWell(
+                onTap: () {
+                  Get.to(()=>FriendRequests());
+                },
+                child: Container(
+                  width: 45,
+                  margin: EdgeInsets.symmetric(vertical: 30),
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Color(0xff0d4376),
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xff02203a),
+                            Color(0xff062f54),
+                          ]),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xff0c4373).withOpacity(0.5),
+                          blurRadius: 20,
+                          offset: Offset(0, 0),
+                        ),
+                      ]),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.person_2_rounded,
+                        size: 28,
+                        color: Colors.white70,
+                      ),
+                      StreamBuilder(stream: getProposals(), builder: 
+                      (context, snapshot) {
+                        if(snapshot.hasData){
+                        return Text('${snapshot.data!}');
+                        }
+                        return Text('0');
+                      },)
+                    ],
+                  ),
+                ),
+              ),
+            ],
           )
         ],
       ),
