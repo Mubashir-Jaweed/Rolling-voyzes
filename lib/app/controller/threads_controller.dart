@@ -221,10 +221,29 @@ class ThreadsControllers {
         .collection('users')
         .doc(currentUser)
         .get();
+
+    List usersData = [];
+
     if (homies.exists) {
       final data = homies.data();
       final List<dynamic> relations = data?['relations'] ?? [];
-      return List<Map<String, dynamic>>.from(relations);
+
+      for (var user in relations) {
+        final thisUser = await FirebaseFirestore.instance.collection('users').doc(user['id']).get();
+        if(thisUser.exists){
+          final thisUserData = thisUser.data();
+          usersData.add({
+            'id':user['id'],
+            'uniqueId':thisUserData?['uniqueId'],
+            'onlineAt':thisUserData?['onlineAt'] ?? '',
+            'avatar':thisUserData?['avatar'] == '' ? '1': thisUserData?['avatar'],
+            'isOnline':thisUserData?['isOnline'] ?? false,
+          });
+        }
+
+      }
+
+      return List<Map<String, dynamic>>.from(usersData);
     } else {
       return [];
     }
@@ -243,6 +262,7 @@ class ThreadsControllers {
       return [];
     }
   }
+ 
   Future<int> getProposalsLength() async {
     final homies = await FirebaseFirestore.instance
         .collection('users')

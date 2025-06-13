@@ -9,6 +9,7 @@ import 'package:voyzi/app/my_utils/avatar.dart';
 import 'package:voyzi/app/ui/inbox/add_friend.dart';
 import 'package:voyzi/app/ui/inbox/firends_request.dart';
 import 'package:voyzi/app/ui/widgets/background_border_container.dart';
+import 'package:voyzi/app/ui/widgets/relation_card.dart';
 import 'package:voyzi/app/utils/constants/app_border_radius.dart';
 import 'package:voyzi/app/utils/constants/app_constants.dart';
 import 'package:voyzi/app/utils/constants/app_edge_insets.dart';
@@ -74,6 +75,7 @@ class Inbox extends GetItHook {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
+                    print('.........................................${snapshot.error}');
                     return Center(
                         child:
                             Text('Try again after some time')); // Error state
@@ -87,33 +89,7 @@ class Inbox extends GetItHook {
                       itemCount: relations.length,
                       itemBuilder: (context, index) {
                         final user = relations[index];
-                        return ListTile(
-                          title: Text(
-                            '${user['name']}',
-                            style: TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black),
-                          ),
-                          subtitle: Text('${user['email']}',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey)),
-                          leading: Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: Colors.black, width: 3)),
-                            child: Icon(
-                              Icons.person_outlined,
-                              size: 35,
-                              color: Colors.black,
-                            ),
-                          ),
-                          trailing: Text(
-                              '${!user['isAccepted'] ? ' request pending' : ''}'),
-                        );
+                        return RelationCard(user: user,);
                       },
                     );
                   }
@@ -292,7 +268,7 @@ class _NoContactFoundState extends State<NoContactFound> {
             children: [
               InkWell(
                 onTap: () {
-                  Get.to(()=>AddFriend());
+                  Get.to(() => AddFriend());
                 },
                 child: Container(
                   width: 260,
@@ -366,35 +342,33 @@ class _NoContactFoundState extends State<NoContactFound> {
                       ]),
                   child: Stack(
                     children: [
-                       Icon(
+                      Icon(
                         Icons.person_2_rounded,
                         size: 28,
                         color: Colors.white70,
                       ),
                       Positioned(
-                        top: 0,
-                        right: 0,
+                          top: 0,
+                          right: 0,
                           child: StreamBuilder(
-                        stream: getProposalsCount(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return Container(
-                              height: 10,
-                              width: 10,
-                              decoration: 
-                              BoxDecoration(
-                                color: Colors.lightBlueAccent,
-                                borderRadius: BorderRadius.circular(100)
-                              ),
-                              child: Text('.'),
-                            );
-                          } else if (snapshot.data == 0) {
-                            return Text('');
-                          } else {
-                            return Text('');
-                          }
-                        },
-                      ))
+                            stream: getProposalsCount(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return Container(
+                                  height: 10,
+                                  width: 10,
+                                  decoration: BoxDecoration(
+                                      color: Colors.lightBlueAccent,
+                                      borderRadius: BorderRadius.circular(100)),
+                                  child: Text('.'),
+                                );
+                              } else if (snapshot.data == 0) {
+                                return Text('');
+                              } else {
+                                return Text('');
+                              }
+                            },
+                          ))
                     ],
                     alignment: Alignment.center,
                   ),
